@@ -15,13 +15,13 @@
        
         Directory of C:\Users\Lenovo\Desktop\2026.9-python\desktop-agent\workspace
        
-       2026/10/27  15:55    <DIR>          .
-       2026/10/27  21:12    <DIR>          ..
+       2026/10/27  21:13    <DIR>          .
+       2026/10/27  21:48    <DIR>          ..
        2026/10/27  15:06               562 README.md
-       2026/10/27  15:55               434 stats.py
-       2026/10/27  15:55             1,091 test_stats.py
+       2026/10/27  21:13               434 stats.py
+       2026/10/27  21:13             1,091 test_stats.py
                       3 File(s)          2,087 bytes
-                      2 Dir(s)  67,583,168,512 bytes free
+                      2 Dir(s)  66,317,393,920 bytes free
        [exit_code=0]
 [step 2/10]
   (model) 读一下 stats.py。

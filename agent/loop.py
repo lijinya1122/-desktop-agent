@@ -19,7 +19,7 @@ from agent.config import Settings
 from agent.llm import LLMClient, LLMError, messages_tokens
 from agent.mcp import MCPManager, is_mcp_tool
 from agent import tools as tmod
-from agent.tools import ToolError, ToolResult, WORKSPACE, _unified_diff
+from agent.tools import ToolError, ToolResult, _unified_diff
 
 EventFn = Callable[[Dict[str, Any]], Any]
 
@@ -88,12 +88,13 @@ class AgentLoop:
                     return "（old 未命中，执行会失败）"
                 if n > 1:
                     return f"（old 出现 {n} 次，执行会失败）"
-                rel = str(p.relative_to(WORKSPACE.resolve()))
+                # 注意用 tmod.WORKSPACE（实时值）：import 时的旧值在打包版里会指向错误目录
+                rel = str(p.relative_to(tmod.WORKSPACE.resolve()))
                 return _unified_diff(text, text.replace(old, str(args.get("new", "")), 1), rel)
             if name == "write":
                 p = tmod._resolve(str(args.get("path", "")))
                 old = p.read_text(encoding="utf-8") if p.exists() else ""
-                rel = str(p.relative_to(WORKSPACE.resolve()))
+                rel = str(p.relative_to(tmod.WORKSPACE.resolve()))
                 return _unified_diff(old, str(args.get("content", "")), rel)
         except Exception as e:
             return f"（预览失败：{e}）"
