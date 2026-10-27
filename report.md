@@ -1,6 +1,6 @@
 # report.md · 大作业报告
 
-> 姓名：李进雅　｜　学号：＿＿＿＿　｜　组队：无
+> 姓名：李进雅　｜　学号：MP2608016　｜　组队：无
 > 仓库：https://github.com/lijinya1122/desktop-agent　｜　Release：`<填写链接>`
 
 ## 1. 做了什么

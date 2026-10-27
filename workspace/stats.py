@@ -3,7 +3,7 @@
 
 def mean(nums):
     if not nums:
-        return 0
+        raise ValueError("nums 不能为空")
     total = 0
     for n in nums:
         total += n
@@ -12,7 +12,7 @@ def mean(nums):
 
 def median(nums):
     if not nums:
-        return 0
+        raise ValueError("nums 不能为空")
     ordered = sorted(nums)
     mid = len(ordered) // 2
     if len(ordered) % 2:

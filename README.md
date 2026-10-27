@@ -5,6 +5,25 @@
 
 ![三栏：工作区 · 文件与 diff · 对话与工具调用](docs/screenshot.png)
 
+## 实际跑一次「修 bug」任务的完整轨迹
+
+第一步先 `bash dir` 摸清工作区、`read` 读目标文件：
+
+![bash 摸底 + read 读文件](docs/shot1_bash_read.png)
+
+第一次 `edit` 用了太短的 `old`（`return 0` 出现 2 次），**工具直接拒绝、如实报错**；
+确认卡片还会提前标注「执行会失败」。模型补上下文后第二次成功，diff 一目了然：
+
+![edit 失败与恢复，diff 可见](docs/shot2_edit_fail_recover.png)
+
+写操作先给人确认（diff 预览），确认后才落盘——这是可关掉的闸门：
+
+![diff 预览确认](docs/shot3_diff_confirm.png)
+
+最后跑测试验证，4/4 通过。**说改了就是真改了**，测试结果是工具跑出来的：
+
+![跑测试验证](docs/shot4_test_pass.png)
+
 ---
 
 ## 三步启动
