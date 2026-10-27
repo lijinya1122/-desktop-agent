@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>Mini Cursor · 桌面智能体</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">Mini<span>Cursor</span></div>
+    <div class="path" id="wsPath">…</div>
+    <div class="spacer"></div>
+    <div class="badge" id="modelBadge">模型 …</div>
+    <div class="badge mcp" id="mcpBadge">MCP …</div>
+    <button id="btnReloadMcp">重载 MCP</button>
+    <button id="btnSettings">设置</button>
+  </header>
+
+  <main>
+    <!-- 左：工作区 -->
+    <section class="col">
+      <div class="col-head">工作区</div>
+      <div class="col-body">
+        <div class="tree" id="tree"></div>
+      </div>
+      <div class="mcp-panel">
+        <div style="color:var(--fg-dim);margin-bottom:4px;">MCP SERVERS</div>
+        <div id="mcpList"></div>
+      </div>
+    </section>
+
+    <!-- 中：文件 / diff -->
+    <section class="col">
+      <div class="col-head">
+        <span id="fileTitle">未打开文件</span>
+        <span style="margin-left:auto;color:var(--fg-dim)" id="fileMode"></span>
+      </div>
+      <div class="col-body">
+        <div class="editor" id="editor"><div class="empty">左侧点一个文件，或让智能体改点什么。</div></div>
+      </div>
+    </section>
+
+    <!-- 右：对话 + 工具调用 -->
+    <section class="col">
+      <div class="col-head">
+        <span>对话 · 工具调用</span>
+        <span style="margin-left:auto" id="stepInfo"></span>
+      </div>
+      <div class="col-body" id="chat"></div>
+      <div class="composer">
+        <textarea id="input" placeholder="让智能体做点什么…（Enter 发送，Shift+Enter 换行）"></textarea>
+        <div class="btns">
+          <button class="primary" id="btnSend">发送</button>
+          <button class="danger" id="btnStop" disabled>停止</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modalHost"></div>
+<script src="app.js"></script>
+</body>
+</html>

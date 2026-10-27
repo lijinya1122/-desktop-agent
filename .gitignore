@@ -1,0 +1,21 @@
+# Key 绝不入库 —— 进了公开仓库就等于已泄露
+.env
+*.env
+!.env.example
+
+# 打包产物
+dist/
+build/
+*.spec.bak
+__pycache__/
+*.py[cod]
+
+# 环境与编辑器
+.venv/
+venv/
+.idea/
+.vscode/
+.DS_Store
+
+# 运行期产生的东西（配置在 ~/.desktop-agent，不在这里）
+*.log
