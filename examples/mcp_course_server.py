@@ -19,20 +19,33 @@ def log(msg):
 
 
 # ---------------------------------------------------------------- 课表数据
-# （示例数据，换成自己的真实课表即可）
+# 来源：研究生课表.pdf（南京审计大学 · 统计与数据科学学院 · 2026-2027 学年第一学期）
+# 一节 40 分钟，时间按节次起止合并写成区间。
 COURSES = [
-    {"name": "Python 智能体专题", "day": "周一", "time": "08:00-09:40",
-     "place": "教三 401", "teacher": "王老师"},
-    {"name": "机器学习", "day": "周一", "time": "14:00-15:40",
-     "place": "教二 305", "teacher": "李老师"},
-    {"name": "最优化方法", "day": "周二", "time": "10:00-11:40",
-     "place": "教三 208", "teacher": "张老师"},
-    {"name": "数据分析与建模", "day": "周三", "time": "08:00-09:40",
-     "place": "实验楼 B203", "teacher": "陈老师"},
-    {"name": "自然语言处理专题", "day": "周四", "time": "14:00-15:40",
-     "place": "教二 512", "teacher": "刘老师"},
-    {"name": "学术写作与规范", "day": "周五", "time": "10:00-11:40",
-     "place": "图书馆报告厅", "teacher": "赵老师"},
+    {"name": "神经网络与深度学习", "day": "周一", "time": "09:20~11:50", "jieci": "第2-4节",
+     "place": "致明楼418", "teacher": "周兴才", "weeks": "7-12周"},
+    {"name": "神经网络与深度学习", "day": "周五", "time": "19:20~20:50", "jieci": "第12-13节",
+     "place": "致明楼418", "teacher": "周兴才", "weeks": "7-12周"},
+    {"name": "英语（专硕）", "day": "周二", "time": "10:20~12:40", "jieci": "第3-5节",
+     "place": "致明楼418", "teacher": "胡静", "weeks": "3-18周"},
+    {"name": "Python编程与案例实务", "day": "周二", "time": "13:30~16:00", "jieci": "第6-8节",
+     "place": "敏达楼202", "teacher": "卢燚", "weeks": "3-18周"},
+    {"name": "经济统计与运行监测", "day": "周三", "time": "08:30~11:00", "jieci": "第1-3节",
+     "place": "致明楼419", "teacher": "郑彦、王荐", "weeks": "7-17周"},
+    {"name": "中国审计学专题", "day": "周三", "time": "15:20~16:50", "jieci": "第8-9节",
+     "place": "审计署审计干部教育学院学术报告厅", "teacher": "董必荣等", "weeks": "7-16周"},
+    {"name": "统计数据分析方法", "day": "周四", "time": "08:30~11:00", "jieci": "第1-3节",
+     "place": "致明楼315", "teacher": "朱春华", "weeks": "3-18周"},
+    {"name": "统计计算与数据分析", "day": "周四", "time": "15:20~16:50", "jieci": "第8-9节",
+     "place": "致明楼417", "teacher": "张燕", "weeks": "9-17周"},
+    {"name": "职业道德与论文写作（应用统计）", "day": "周四", "time": "19:20~20:50",
+     "jieci": "第12-13节", "place": "敏行楼205", "teacher": "赵彦勇等", "weeks": "4-15周"},
+    {"name": "统计学基础", "day": "周五", "time": "10:20~12:40", "jieci": "第3-5节",
+     "place": "致明楼315", "teacher": "李慧琴", "weeks": "3-18周"},
+    {"name": "统计计算与数据分析", "day": "周五", "time": "13:30~16:50", "jieci": "第6-9节",
+     "place": "致明楼417", "teacher": "张燕", "weeks": "9-17周"},
+    {"name": "新时代中国特色社会主义理论与实践", "day": "周五", "time": "15:20~16:50",
+     "jieci": "第8-9节", "place": "致明楼报告厅", "teacher": "齐效玫", "weeks": "3-18周"},
 ]
 
 WEEK = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
@@ -48,15 +61,21 @@ def query_course(name: str) -> str:
         names = "、".join(c["name"] for c in COURSES)
         return f"课表里没有「{kw}」。当前有：{names}"
     return "\n".join(
-        f"{c['name']}：{c['day']} {c['time']}　{c['place']}　{c['teacher']}"
+        f"{c['name']}：{c['day']} {c['time']}（{c['jieci']}, {c['weeks']}）　"
+        f"{c['place']}　{c['teacher']}"
         for c in hits)
+
+
+def _order(items):
+    return sorted(items, key=lambda c: (WEEK.index(c["day"]), c["time"]))
 
 
 def list_courses() -> str:
     """列出整张课表。用户问「这学期有哪些课」「课表给我看看」时用。"""
-    return "\n".join(
-        f"{c['day']} {c['time']}　{c['name']}　{c['place']}　{c['teacher']}"
-        for c in COURSES)
+    head = "南京审计大学 · 2026-2027学年第一学期 · 统计学硕 MP2608016\n"
+    return head + "\n".join(
+        f"{c['day']} {c['time']}　{c['name']}　{c['place']}　{c['teacher']}　{c['weeks']}"
+        for c in _order(COURSES))
 
 
 def courses_on(day: str = "") -> str:
@@ -68,7 +87,8 @@ def courses_on(day: str = "") -> str:
     if not hits:
         return f"{d} 没课。"
     return f"{d} 的课：\n" + "\n".join(
-        f"  {c['time']}　{c['name']}　{c['place']}　{c['teacher']}" for c in hits)
+        f"  {c['time']}（{c['jieci']}）　{c['name']}　{c['place']}　{c['teacher']}　{c['weeks']}"
+        for c in _order(hits))
 
 
 TOOLS = {
