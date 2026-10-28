@@ -99,14 +99,30 @@ function addToolCard(ev) {
   const card = document.createElement('div');
   card.className = 'card' + (ev.mcp ? ' mcpcard' : '');
   card.innerHTML = `
-    <div class="hd">
+    <div class="hd" title="点击折叠/展开">
       <span class="nm">${esc(ev.name)}</span>
       ${ev.mcp ? '<span class="tag mcp">MCP</span>' : '<span class="tag">内置</span>'}
+      <span class="sum"></span>
       <span class="st">执行中…</span>
     </div>
     <div class="bd"><div class="args">${esc(argSummary(ev.arguments))}</div><pre></pre></div>`;
+  card.querySelector('.hd').onclick = () => {
+    card.classList.toggle('fold');
+    renderSum(card);
+  };
   $('chat').appendChild(card);
   cards.set(ev.id, card);
+}
+
+function firstLine(text, n = 60) {
+  const line = String(text || '').split('\n').find((x) => x.trim()) || '';
+  return line.length > n ? line.slice(0, n) + '…' : line;
+}
+
+function renderSum(card) {
+  const el = card.querySelector('.sum');
+  if (!el) return;
+  el.textContent = card.classList.contains('fold') ? (card.dataset.sum || '') : '';
 }
 
 function fillToolCard(ev) {
@@ -120,6 +136,8 @@ function fillToolCard(ev) {
   if (ev.diff) body.push(diffHtml(ev.diff));
   if (ev.text) body.push('<div>' + esc(ev.text) + '</div>');
   pre.innerHTML = body.join('');
+  card.dataset.sum = firstLine(ev.ok ? ev.text : '失败：' + ev.text);
+  renderSum(card);
   if (ev.diff) {
     const btn = document.createElement('button');
     btn.textContent = '在中间栏看 diff';
@@ -298,6 +316,7 @@ function init() {
   $('btnSend').onclick = doSend;
   $('btnStop').onclick = () => { send({ type: 'stop' }); $('btnStop').disabled = true; };
   $('btnSettings').onclick = openSettings;
+  $('btnRefreshTree').onclick = () => { refreshTree(); sys('工作区已刷新'); };
   $('btnReloadMcp').onclick = async () => {
     const r = await fetch('/api/mcp/reload', { method: 'POST' }).then((x) => x.json());
     renderMcp(r.mcp || []);
