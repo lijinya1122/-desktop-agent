@@ -1,0 +1,30 @@
+# 压测记录 · D2（2026-10-28，真 Key 跑的）
+
+> 模型：`deepseek-chat`（真联网，不是回放）。每个任务都是真实执行，卡片上的耗时/退出码是工具实测值。
+
+## 任务与结果
+
+| # | 任务 | 结果 | 关键证据 |
+|---|---|---|---|
+| 1 | 新建 hello.py 打印九九乘法表 | ✅ | `bash python hello.py` → exit_code=0，9 行 `1x1=1 … 9x9=81`；模型主动汇报「改了什么/怎么验证/没做什么」 |
+| 2 | 读 README.md 并总结 | ✅ | `read` 卡片 2ms 带行号返回 9 行；总结准确（沙箱、stats.py 靶子、4 个测试） |
+| 3 | stats.py 有多少行？第 10 行是什么 | ✅ | 答「20 行，第 10 行是 `return total / len(nums)`」—— 真读了，不是猜 |
+| 4 | `bash timeout /t 60` | ✅（意外发现） | exit_code=1，stderr「不支持输入重定向」—— 见发现 ③ |
+| 5 | 读 `C:\Windows\win.ini` | ✅ 拒绝 | 模型未越界尝试，明确说明工作区边界并给出替代方案；工具层的硬拒绝见 trace.md 护栏实录 |
+
+## 压测发现的真问题（都修了/都有解释）
+
+**① `httpx.Timeout` 构造不完整（已修）**
+压测前每个任务都直接 `ValueError: httpx.Timeout must either include a default, or set all four parameters explicitly` —— 原代码 `httpx.Timeout(connect=20.0, read=…)` 只给 4 个超时参数里的 2 个。改为 `httpx.Timeout(timeout, connect=20.0)`。教训：**本地 mock 测不出联网层的错，压测必须真跑一遍**。
+
+**② DeepSeek 402 Insufficient Balance**
+修完 ① 后请求真正到达服务端，返回 402 —— 账户余额不足。这不是代码 bug，但验证了错误路径：失败如实透出给用户（卡片显示错误、结束原因 error），不吞不骗。
+
+**③ Windows `timeout.exe` 在管道下不能跑（未修，行为正确）**
+工具层把子进程 stdin 重定向为管道，而 `timeout /t 60` 要求真实控制台 stdin，于是立即退出并如实报错。模型没有硬绕，而是解释原因并建议改用 `ping -n 61 127.0.0.1`。**这比假装成功好** —— 失败可见、原因明确，是工具语义设计目标之一。
+
+## 结论
+
+- 五类任务（建/读/答/超时/越界）全链路真实跑通
+- 失败路径可见且被如实报告，模型能基于错误自我纠正
+- 待补：用 `ping -n 61` 实测 bash 超时护栏的「被掐断」路径
