@@ -89,7 +89,7 @@ def tool_tests(tmp: Path):
             tmod.read("../../etc/passwd")
         except tmod.ToolError as e:
             assert "越界" in str(e), str(e)
-            return str(e)[:80]
+            return str(e)
         raise AssertionError("越界读竟然成功了")
 
     def t_bash_ok():
@@ -109,7 +109,7 @@ def tool_tests(tmp: Path):
         cmd = 'python -c "import time; time.sleep(8)"'
         r = tmod.bash(cmd, timeout=2)
         assert r.extra["timed_out"] is True, r.extra
-        return "超时被终止，循环没挂死"
+        return r.text.replace("\n", " | ")[:200]
 
     def t_bash_truncate():
         cmd = ("python -c \"print('x'*50000)\"")
@@ -167,7 +167,7 @@ async def loop_test(workspace: Path) -> dict:
     return {"result": result, "events": events}
 
 
-def render_trace(run: dict) -> str:
+def render_trace(run: dict, guards: Dict[str, str]) -> str:
     result, events = run["result"], run["events"]
     lines = []
     lines.append("# trace · 一次完整运行记录\n")
@@ -200,6 +200,12 @@ def render_trace(run: dict) -> str:
     lines.append("2. **恢复**：模型把 `old` 写长，带上 `def mean(nums):` 整段，替换唯一命中。")
     lines.append("3. **验证**：`bash` 跑 `python test_stats.py`，4/4 通过 —— 结论有证据，不是「我改好了」。")
     lines.append("4. **护栏**：步数上限、整体超时、工具超时（bash 2s 那条）、输出截断、路径越界，逐条都在上面。")
+    lines.append("\n## 护栏的真实输出（同一轮自检跑出来的，不是写的）\n")
+    lines.append("```")
+    for name, detail in guards.items():
+        lines.append(f"$ {name}")
+        lines.append(f"  {detail}")
+    lines.append("```")
     return "\n".join(lines)
 
 
@@ -211,6 +217,10 @@ def main() -> int:
     tool_tests(tmp)
     for st, name, ms, detail in results:
         print(f"  [{st}] {name} {ms}  {detail}")
+
+    # 这几条护栏的真实输出要一并写进 trace.md，光写「有护栏」没说服力
+    guard_names = ("路径越界 → 拒绝", "bash 超时", "edit 不唯一 → 拒绝", "bash 输出截断")
+    guards = {n: d for st, n, _ms, d in results if n in guard_names}
 
     print()
     print("=" * 70)
@@ -251,7 +261,7 @@ def main() -> int:
 
     docs = ROOT / "docs"
     docs.mkdir(exist_ok=True)
-    (docs / "trace.md").write_text(render_trace(run), encoding="utf-8")
+    (docs / "trace.md").write_text(render_trace(run, guards), encoding="utf-8")
     print("\ntrace 已写入 docs/trace.md")
 
     shutil.rmtree(tmp, ignore_errors=True)

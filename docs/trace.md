@@ -15,13 +15,13 @@
        
         Directory of C:\Users\Lenovo\Desktop\2026.9-python\desktop-agent\workspace
        
-       2026/10/27  21:13    <DIR>          .
-       2026/10/27  21:48    <DIR>          ..
+       2026/10/28  12:16    <DIR>          .
+       2026/10/27  23:09    <DIR>          ..
        2026/10/27  15:06               562 README.md
-       2026/10/27  21:13               434 stats.py
-       2026/10/27  21:13             1,091 test_stats.py
+       2026/10/28  12:16               434 stats.py
+       2026/10/28  12:16             1,091 test_stats.py
                       3 File(s)          2,087 bytes
-                      2 Dir(s)  66,317,393,920 bytes free
+                      2 Dir(s)  64,452,255,744 bytes free
        [exit_code=0]
 [step 2/10]
   (model) 读一下 stats.py。
@@ -84,3 +84,16 @@
 2. **恢复**：模型把 `old` 写长，带上 `def mean(nums):` 整段，替换唯一命中。
 3. **验证**：`bash` 跑 `python test_stats.py`，4/4 通过 —— 结论有证据，不是「我改好了」。
 4. **护栏**：步数上限、整体超时、工具超时（bash 2s 那条）、输出截断、路径越界，逐条都在上面。
+
+## 护栏的真实输出（同一轮自检跑出来的，不是写的）
+
+```
+$ edit 不唯一 → 拒绝
+  edit 失败：old 在 dup.txt 中出现 2 次，无法确定改哪一处。请把 old 写长一点（多带几行上下文）让它唯一，不要用模糊匹配。
+$ 路径越界 → 拒绝
+  拒绝：路径越界（../../etc/passwd）。只能访问工作区内的文件，可用目录：a/、big.txt、dup.txt
+$ bash 超时
+  $ python -c "import time; time.sleep(8)" | [超过 2s 已被终止] | [exit_code=None]
+$ bash 输出截断
+  长输出被截断，上下文没被撑爆
+```
