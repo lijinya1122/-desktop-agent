@@ -215,8 +215,8 @@ async def _worker(sess: Session) -> None:
         s = Settings.load()
         llm = None
         if s.demo_mode:
-            from agent.mock import MockLLM
-            llm = MockLLM()
+            from agent.mock import MockLLM, pick_script
+            llm = MockLLM(pick_script(text))   # 按提问挑回放脚本，演示模式不止一个任务
         loop = AgentLoop(s, mcp=MCP_HOLDER.manager, confirm_cb=confirm_cb, llm=llm)
         try:
             result = await loop.run(text, emit=sess.emit, cancel=sess.cancel,

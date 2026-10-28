@@ -37,6 +37,40 @@ def default_script() -> List[Dict[str, Any]]:
     ]
 
 
+def script_newfile() -> List[Dict[str, Any]]:
+    """第二个演示脚本：write 建新文件 + bash 跑它 + 故意越界被拒。"""
+    run_cmd = "python hello.py" if os.name == "nt" else "python3 hello.py"
+    return [
+        {"content": "先看一下工作区里有什么。",
+         "calls": [("bash", {"command": "dir" if os.name == "nt" else "ls -la", "timeout": 15})]},
+        {"content": "写一个 hello.py，打印九九乘法表。",
+         "calls": [("write", {"path": "hello.py", "content": (
+             '"""九九乘法表。"""\n\n\n'
+             "def table():\n"
+             "    for i in range(1, 10):\n"
+             "        row = []\n"
+             "        for j in range(1, i + 1):\n"
+             "            row.append(f\"{j}x{i}={i * j}\")\n"
+             '        print("  ".join(row))\n\n\n'
+             'if __name__ == "__main__":\n'
+             "    table()\n")})]},
+        {"content": "跑一下确认输出对不对。",
+         "calls": [("bash", {"command": run_cmd, "timeout": 60})]},
+        # 越界被拒：让工具层挡住，演示「安全边界是真的」
+        {"content": "顺手看看工作区外面有什么。",
+         "calls": [("read", {"path": "../README.md"})]},
+        {"content": "已新建 hello.py，九九乘法表打印正常；越界的读写被工具层拒绝了。"},
+    ]
+
+
+def pick_script(task: str) -> List[Dict[str, Any]]:
+    """按任务关键词选回放脚本 —— 演示模式因此不止能演一个任务。"""
+    t = (task or "").lower()
+    if any(k in t for k in ("九九", "乘法表", "hello", "新建", "写一个", "创建")):
+        return script_newfile()
+    return default_script()
+
+
 class MockLLM:
     def __init__(self, script: Optional[List[Dict[str, Any]]] = None):
         self.script = script or default_script()

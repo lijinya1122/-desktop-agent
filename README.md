@@ -56,6 +56,13 @@ python scripts/selftest.py     # 工具单测 + MCP 往返 + 一次完整 ReAct 
 python -m agent.cli "读一下工作区里有什么文件" --mock
 ```
 
+界面里的**「演示模式」**（设置里勾选）是离线回放，不需要 Key 也能演两个任务：
+
+| 输入 | 演什么 |
+|---|---|
+| `让 mean 和 median 对空列表抛 ValueError，然后跑测试验证` | 读文件 → edit 不唯一失败 → 写长 old 恢复 → 跑测试 4/4 |
+| `新建一个 hello.py，打印九九乘法表` | write 建新文件 → bash 跑出结果 → 越界读取被拒绝 |
+
 ---
 
 ## 界面三块
