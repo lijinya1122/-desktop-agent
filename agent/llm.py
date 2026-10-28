@@ -76,7 +76,8 @@ class LLMClient:
         usage: Dict[str, Any] = {}
 
         async with httpx.AsyncClient(
-            timeout=httpx.Timeout(connect=20.0, read=self.timeout)
+            # httpx 要求：要么给 default，要么四个参数全给。这里 default=整体超时，connect 单独 20s
+            timeout=httpx.Timeout(self.timeout, connect=20.0)
         ) as client:
             try:
                 async with client.stream("POST", url, json=payload, headers=headers) as resp:
