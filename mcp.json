@@ -4,6 +4,11 @@
       "command": "python",
       "args": ["examples/mcp_demo_server.py"],
       "enabled": true
+    },
+    "course": {
+      "command": "python",
+      "args": ["examples/mcp_course_server.py"],
+      "enabled": true
     }
   }
 }
