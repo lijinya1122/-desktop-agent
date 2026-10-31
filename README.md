@@ -24,6 +24,19 @@
 
 ![跑测试验证](docs/shot4_test_pass.png)
 
+## 失败与恢复（工具层的真实报错）
+
+`python scripts/failure_demo.py` 会真的调用工具、真的失败，并把输出原样写进 `docs/failures.md`：
+
+| 场景 | 工具的做法 |
+|---|---|
+| `edit` 的 old 出现 2 次 | 拒绝猜测，报「出现 2 次」并提示写长 old → 模型补上下文后成功 |
+| 读工作区外的文件 / `../` 越界 | 拒绝并告知可用范围 |
+| `bash` 命令超过 timeout | 到点掐断，返回「已被终止」，界面不卡死 |
+| `edit` 的 old 根本不存在 | 报「出现 0 次，请先 read」，不静默成功 |
+
+完整运行轨迹见 [`docs/trace.md`](docs/trace.md)（自动生成），真 Key 压测记录见 [`docs/stress_test.md`](docs/stress_test.md)。
+
 ---
 
 ## 三步启动
@@ -140,8 +153,9 @@ desktop-agent/
 ├── ui/                     index.html / app.js / style.css
 ├── examples/mcp_demo_server.py
 ├── scripts/selftest.py     自检（生成 docs/trace.md）
+├── scripts/failure_demo.py 故意制造失败（生成 docs/failures.md）
 ├── workspace/              智能体的沙箱（stats.py 里留了个 bug 给它修）
-└── docs/                   trace.md · build.md
+└── docs/                   trace.md · failures.md · stress_test.md · build.md
 ```
 
 ## 事件流协议（关掉前端也能测）

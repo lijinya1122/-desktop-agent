@@ -3,6 +3,9 @@
 > 由 `python scripts/selftest.py` 自动生成 —— 工具是真的、失败是真的、diff 是真的。
 > 模型用的是 `agent/mock.py` 的离线回放（不联网），因此这份 trace 任何人都能复现。
 
+> 想看**工具层的失败与恢复**（edit 不唯一 / 路径越界 / bash 超时 / old 不存在，各带真实报错）：
+> 见 [`docs/failures.md`](failures.md)，由 `python scripts/failure_demo.py` 生成。
+
 任务：**让 mean 和 median 对空列表抛 ValueError，然后跑测试验证**
 
 ```
@@ -15,13 +18,14 @@
        
         Directory of C:\Users\Lenovo\Desktop\2026.9-python\desktop-agent\workspace
        
-       2026/10/28  12:16    <DIR>          .
+       2026/10/29  06:06    <DIR>          .
        2026/10/27  23:09    <DIR>          ..
+       2026/10/29  06:06               308 hello.py
        2026/10/27  15:06               562 README.md
-       2026/10/28  12:16               434 stats.py
-       2026/10/28  12:16             1,091 test_stats.py
-                      3 File(s)          2,087 bytes
-                      2 Dir(s)  64,452,255,744 bytes free
+       2026/10/29  06:06               434 stats.py
+       2026/10/29  06:06             1,091 test_stats.py
+                      4 File(s)          2,395 bytes
+                      2 Dir(s)  66,749,423,616 bytes free
        [exit_code=0]
 [step 2/10]
   (model) 读一下 stats.py。

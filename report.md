@@ -1,13 +1,16 @@
 # report.md · 大作业报告
 
 > 姓名：李进雅　｜　学号：MP2608016　｜　组队：无
-> 仓库：https://github.com/lijinya1122/desktop-agent　｜　Release：`<填写链接>`
+> 仓库：https://github.com/lijinya1122/-desktop-agent　｜　Release：`<填写链接>`
 
 ## 1. 做了什么
 
 **Mini Cursor**：一个双击打开的桌面窗口（`pywebview`，有标题栏，不是 localhost 网页），
 里面跑着一个 ReAct 循环的编程智能体，四个工具（`read / write / edit / bash`），
-并且真接上了一个 MCP server（`examples/mcp_demo_server.py`，纯标准库 stdio JSON-RPC）。
+并且**自己写了两个 MCP server**（纯标准库 stdio JSON-RPC）：
+`examples/mcp_demo_server.py`（天气/时间/加法，跟着课程示例走通协议）
+和 `examples/mcp_course_server.py`（查课表：按课程名查 / 列全表 / 按星期查，
+数据是我自己的研究生课表）。第二个是为了证明 MCP 不是只跑老师给的示例。
 
 架构分三层，`agent/` 能脱离界面单独跑（`python -m agent.cli`）：
 
@@ -63,9 +66,13 @@ PyInstaller + `desktop-agent.spec`（onedir）。spec 里带 `ui/`、`mcp.json`�
 ## 6. 怎么验证
 
 ```bash
-python scripts/selftest.py   # 工具单测 + MCP 往返 + 完整 ReAct 轨迹（自动生成 docs/trace.md）
-python scripts/smoke_ws.py   # 起后端、打 REST、连 WebSocket 走事件流
-python app.py                # 双击体验（没 Key 可在设置里开「演示模式」）
+python scripts/selftest.py      # 工具单测 + MCP 往返 + 完整 ReAct 轨迹（自动生成 docs/trace.md）
+python scripts/failure_demo.py  # 故意制造 4 种失败 + 1 次恢复（生成 docs/failures.md）
+python scripts/smoke_ws.py      # 起后端、打 REST、连 WebSocket 走事件流
+python app.py                   # 双击体验（没 Key 可在设置里开「演示模式」）
 ```
 
 自检 13/13、冒烟 8/8、演示模式全链路（含确认闸门）通过 —— 结果都贴在上面对应脚本的输出里。
+
+真实压测记录见 `docs/stress_test.md`（用真 Key 跑的 5 类任务 + 3 个真发现），
+失败与恢复的真实输出见 `docs/failures.md`。
