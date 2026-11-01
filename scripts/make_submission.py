@@ -12,13 +12,13 @@
 """
 from __future__ import annotations
 
+import argparse
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DEST = Path.home() / "Desktop" / "MP2608016"
 
 EXCLUDE_DIRS = {".venv", ".git", "dist", "build", "__pycache__", ".idea", ".vscode"}
 EXCLUDE_FILES = {"*.log", "*.pyc", "thumbs.db"}
@@ -26,15 +26,34 @@ EXCLUDE_FILES = {"*.log", "*.pyc", "thumbs.db"}
 REPO_URL = "https://github.com/lijinya1122/-desktop-agent"
 RELEASE_URL = "https://github.com/lijinya1122/-desktop-agent/releases/tag/v1.0.0"
 
-README_TXT = f"""========== 大作业提交说明 ==========
+# 个人模式默认署名；小组模式见 --team
+OWNER_NAME = "李进雅"
+OWNER_ID = "MP2608016"
+TEAM_NAME = "一苇以航"
+MEMBERS = [
+    "MP2608016 李进雅",
+    "MP2608017 宗雯雯",
+    "MP2608019 张琳羚",
+    "MP2608020 郭婉婷",
+]
 
-姓名：李进雅
-学号：MP2608016
-组队：无
+
+def header_block(team: str) -> str:
+    """根据个人/小组模式生成 提交说明.txt 的署名段。"""
+    if team:
+        who = "\n".join(f"  {m}" for m in MEMBERS)
+        return (f"组队：{team}\n"
+                f"成员（学号 姓名）：\n{who}\n")
+    return f"姓名：{OWNER_NAME}\n学号：{OWNER_ID}\n组队：无\n"
+
+
+README_TXT = """========== 大作业提交说明 ==========
+
+{header}
 
 【两个链接】（评分看的就是这两个）
-  仓库（public）：{REPO_URL}
-  Release：{RELEASE_URL}
+  仓库（public）：{repo}
+  Release：{release}
 
 【目录内容】
   README.md     三步启动、工具规格、护栏说明
@@ -77,36 +96,67 @@ def copy_source(dst: Path) -> int:
 
 
 def main() -> int:
-    # 覆盖式生成：不删除已存在的目录（删目录容易失败/误删），直接覆盖同名文件
-    (DEST / "源码").mkdir(parents=True, exist_ok=True)
-    (DEST / "安装包").mkdir(parents=True, exist_ok=True)
-    (DEST / "docs").mkdir(parents=True, exist_ok=True)
+    ap = argparse.ArgumentParser(description="生成大作业提交文件夹")
+    ap.add_argument("--dir", default=OWNER_ID,
+                    help=f"文件夹名（默认 {OWNER_ID}，个人模式）")
+    ap.add_argument("--team", default="",
+                    help="小组名；给了就按小组模式生成（署名换成队名+成员）")
+    args = ap.parse_args()
 
-    n = copy_source(DEST / "源码")
+    team = args.team or (TEAM_NAME if args.dir == TEAM_NAME else "")
+    dest = Path.home() / "Desktop" / args.dir
+
+    # 覆盖式生成：不删除已存在的目录（删目录容易失败/误删），直接覆盖同名文件
+    (dest / "源码").mkdir(parents=True, exist_ok=True)
+    (dest / "安装包").mkdir(parents=True, exist_ok=True)
+    (dest / "docs").mkdir(parents=True, exist_ok=True)
+
+    n = copy_source(dest / "源码")
 
     for name in ("README.md", "report.md", "mcp.json", "requirements.txt",
                  "pyproject.toml", "desktop-agent.spec"):
         src = ROOT / name
         if src.exists():
-            shutil.copy2(src, DEST / name)
+            shutil.copy2(src, dest / name)
 
     for p in (ROOT / "docs").glob("*"):
         if p.is_file() and p.suffix.lower() in (".md", ".png"):
-            shutil.copy2(p, DEST / "docs" / p.name)
+            shutil.copy2(p, dest / "docs" / p.name)
 
     setup = ROOT / "installer" / "MiniCursor_1.0.0_Windows_x64_Setup.exe"
-    zipf = ROOT / "dist" / "MiniCursor_1.0.0_Windows_x64.zip"
-    for f in (setup, zipf):
+    zips = [ROOT / "dist" / "MiniCursor_1.0.0_Windows_x64.zip",
+            ROOT / "installer" / "MiniCursor_Setup.zip"]
+    for f in (setup, *zips):
         if f.exists():
-            shutil.copy2(f, DEST / "安装包" / f.name)
+            shutil.copy2(f, dest / "安装包" / f.name)
         else:
             print(f"[警告] 缺少 {f.name}，请先打包（见 docs/build.md）")
 
-    (DEST / "提交说明.txt").write_text(README_TXT, encoding="utf-8")
+    # 小组模式：把 report.md / README.md 顶部的署名换成队名 + 成员
+    if team:
+        members = "、".join(m.split(" ", 1)[1] for m in MEMBERS)
+        ids = "、".join(m.split(" ", 1)[0] for m in MEMBERS)
+        new_head = f"> 组队：{team}　｜　成员：{members}　｜　学号：{ids}"
+        for f in ("report.md", "README.md"):
+            fp = dest / f
+            if not fp.exists():
+                continue
+            lines = fp.read_text(encoding="utf-8").splitlines()
+            for i, ln in enumerate(lines[:6]):
+                if ln.startswith("> 姓名：") or ln.startswith("> 组队："):
+                    lines[i] = new_head
+                    break
+            else:
+                lines.insert(0, new_head)
+            fp.write_text("\n".join(lines), encoding="utf-8")
 
-    total = sum(1 for _ in DEST.rglob("*") if _.is_file())
-    size = sum(f.stat().st_size for f in DEST.rglob("*") if f.is_file()) / 1e6
-    print(f"已生成：{DEST}")
+    txt = README_TXT.format(header=header_block(team),
+                            repo=REPO_URL, release=RELEASE_URL)
+    (dest / "提交说明.txt").write_text(txt, encoding="utf-8")
+
+    total = sum(1 for _ in dest.rglob("*") if _.is_file())
+    size = sum(f.stat().st_size for f in dest.rglob("*") if f.is_file()) / 1e6
+    print(f"已生成：{dest}（{'小组模式 · ' + team if team else '个人模式'}）")
     print(f"源码 {n} 个文件，共 {total} 个文件，{size:.1f} MB")
     return 0
 
