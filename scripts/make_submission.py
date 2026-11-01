@@ -24,7 +24,7 @@ EXCLUDE_DIRS = {".venv", ".git", "dist", "build", "__pycache__", ".idea", ".vsco
 EXCLUDE_FILES = {"*.log", "*.pyc", "thumbs.db"}
 
 REPO_URL = "https://github.com/lijinya1122/-desktop-agent"
-RELEASE_URL = "（发 Release 后填：https://github.com/lijinya1122/-desktop-agent/releases/tag/v1.0.0）"
+RELEASE_URL = "https://github.com/lijinya1122/-desktop-agent/releases/tag/v1.0.0"
 
 README_TXT = f"""========== 大作业提交说明 ==========
 
@@ -77,11 +77,10 @@ def copy_source(dst: Path) -> int:
 
 
 def main() -> int:
-    if DEST.exists():
-        shutil.rmtree(DEST)
-    (DEST / "源码").mkdir(parents=True)
-    (DEST / "安装包").mkdir(parents=True)
-    (DEST / "docs").mkdir(parents=True)
+    # 覆盖式生成：不删除已存在的目录（删目录容易失败/误删），直接覆盖同名文件
+    (DEST / "源码").mkdir(parents=True, exist_ok=True)
+    (DEST / "安装包").mkdir(parents=True, exist_ok=True)
+    (DEST / "docs").mkdir(parents=True, exist_ok=True)
 
     n = copy_source(DEST / "源码")
 
