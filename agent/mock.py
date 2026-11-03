@@ -12,6 +12,11 @@ import os
 from typing import Any, Callable, Dict, List, Optional
 
 
+# 回放节奏：默认 0.05s（自检用，几乎瞬间跑完）；
+# 录演示时设 MOCK_TICK=0.9，让每一步像真模型一样有间隔
+TICK = float(os.environ.get("MOCK_TICK", "0.05"))
+
+
 def default_script() -> List[Dict[str, Any]]:
     list_cmd = "dir" if os.name == "nt" else "ls -la"
     return [
@@ -83,15 +88,19 @@ class MockLLM:
                    tools: Optional[List[Dict[str, Any]]] = None,
                    on_text: Optional[Callable[[str], Any]] = None,
                    cancel: Optional[asyncio.Event] = None) -> Dict[str, Any]:
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(TICK)
         item = self.script[self.i] if self.i < len(self.script) else {"content": "回放结束。"}
         self.i += 1
         reply: Dict[str, Any] = {"role": "assistant", "content": item.get("content", ""),
                                  "tool_calls": []}
         if item.get("content") and on_text:
-            r = on_text(item["content"])
-            if asyncio.iscoroutine(r):
-                await r
+            text = item["content"]
+            step = max(4, len(text) // 6)          # 分块吐字，像流式
+            for i in range(0, len(text), step):
+                r = on_text(text[i:i + step])
+                if asyncio.iscoroutine(r):
+                    await r
+                await asyncio.sleep(TICK * 0.5)
         for idx, (name, args) in enumerate(item.get("calls", [])):
             reply["tool_calls"].append({
                 "id": f"mock_{self.i}_{idx}",

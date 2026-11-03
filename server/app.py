@@ -108,6 +108,11 @@ def create_app() -> FastAPI:
             pump.cancel()
             work.cancel()
 
+    # 根路径兜底（必须放在所有 API 路由之后）：index.html 里的 style.css / app.js
+    # 是相对引用，只返回裸 HTML 的话全是 404（pywebview 走 file:// 所以一直没暴露）
+    if ui_dir.exists():
+        app.mount("/", StaticFiles(directory=str(ui_dir), html=True), name="ui-root")
+
     return app
 
 
