@@ -183,6 +183,22 @@ def scenes() -> List[Dict[str, object]]:
     ]
 
 
+# 旁注：无声版靠这两行字把话说清楚（比旁白更省时间，也更适合静音播放）
+NOTES = [
+    "画面全部来自真实运行截图；数字来自 python -m app.inspect 打印的 JSON，不是手写表格。脚本 scripts/make_video.py 可一键重出。",
+    "pywebview + WebView2 打成 exe，双击即开，不是浏览器访问 localhost；左下角 MCP 状态由 stdio 探活得到。",
+    "edit 要求 old 在文件里唯一；文件中有两处 return 0，工具直接报『old 出现 2 次』，拒绝猜位置 —— 这是防止改错文件的关键一票。",
+    "写操作前先渲染红绿 diff，用户点确认才落盘；工作区之外的路径在 _resolve() 里被拒，这一层提示词管不到。",
+    "测试是 bash 工具真跑出来的：4 个用例 0 失败。模型只能读到这行输出，没法自己编『已通过』。",
+    "mcp_course_server.py 纯标准库实现 stdio JSON-RPC，暴露 3 个工具，读入 12 条真实课程，按星期 + 时间排序。",
+    "三道护栏都在代码里：路径白名单、命令超时 3 秒、写确认闸门；另有连续 3 次相同调用检测。",
+    "只把 name + description 放进 system prompt（183 token）；正文 1162 token 仅在 use_skill 时注入，比例 6.3 倍；8 条触发试验误触发 0。",
+    "AGENTS.md 两层注入（全局 + 项目 3.7KB）；hook 拦下 3 次危险操作并给替代方案；改后自动测试红转绿 2 次、只回注 4 行；reviewer 消化 13k token，主上下文 +58。",
+    "两份 JSON 均由程序打印：skill_report.json / custom_report.json；ENABLE_SKILLS=0、ENABLE_HOOKS=0 可整体关闭。自检 13/13、冒烟 8/8。",
+    "仓库 github.com/lijinya1122/-desktop-agent，tag：v1.0 基线 / v1.1 技能 / v1.2 定制层；安装包与报告见提交文件夹。",
+]
+
+
 # ---------------------------------------------------------------- 语音
 def tts(scenes_: List[Dict[str, object]], out_dir: Path) -> List[Path]:
     """用 Windows 自带 SAPI 逐段合成中文旁白（不联网）。"""
@@ -257,20 +273,20 @@ def draw_scene(idx: int, total: int, sc: Dict[str, object]) -> Image.Image:
     d.text((64, 104), str(sc["title"]), font=font(38, True), fill=TEXT)
     d.line([(64, 166), (64 + 72, 166)], fill=ACCENT, width=4)
 
-    # 内容区
+    # 内容区（190 - 545）
     y0 = 200
     image_name: Optional[str] = sc.get("image")  # type: ignore[assignment]
     if image_name:
         p = ROOT / "docs" / str(image_name)
         if p.is_file():
             shot = Image.open(p).convert("RGB")
-            box_w, box_h = 600, 380
+            box_w, box_h = 600, 330
             shot.thumbnail((box_w, box_h), Image.LANCZOS)
             card = Image.new("RGB", (box_w, box_h), (16, 23, 38))
             card.paste(shot, ((box_w - shot.width) // 2, (box_h - shot.height) // 2))
-            img.paste(card, (64, y0 + 38))
-            d.rectangle([64, y0 + 38, 64 + box_w, y0 + 38 + box_h], outline=BORDER, width=2)
-            tx = 64 + box_w + 48
+            img.paste(card, (64, y0))
+            d.rectangle([64, y0, 64 + box_w, y0 + box_h], outline=BORDER, width=2)
+            tx = 64 + box_w + 44
             tw = W - tx - 64
         else:
             tx, tw = 64, W - 128
@@ -279,50 +295,72 @@ def draw_scene(idx: int, total: int, sc: Dict[str, object]) -> Image.Image:
 
     bullets: List[str] = list(sc.get("bullets") or [])  # type: ignore[arg-type]
     kpi = sc.get("kpi")
-    by = y0 + (70 if image_name else 60)
+    by = y0
     if kpi:
         card_w = (tw - 2 * 18) // 3
         for i, (num, label) in enumerate(kpi):  # type: ignore[misc]
             cx = tx + i * (card_w + 18)
-            d.rounded_rectangle([cx, by, cx + card_w, by + 116], radius=14,
+            d.rounded_rectangle([cx, by, cx + card_w, by + 108], radius=14,
                                 fill=CARD, outline=BORDER, width=1)
-            f_num = font(40, True)
-            d.text((cx + 20, by + 20), num, font=f_num, fill=GREEN if i == 0 else TEXT)
-            d.text((cx + 20, by + 78), label, font=font(15), fill=MUTED)
-        by += 116 + 34
+            d.text((cx + 20, by + 16), num, font=font(38, True),
+                   fill=GREEN if i == 0 else TEXT)
+            d.text((cx + 20, by + 70), label, font=font(15), fill=MUTED)
+        by += 108 + 32
 
-    fy = font(21)
+    fy = font(20)
     for b in bullets:
-        d.rounded_rectangle([tx + 2, by + 11, tx + 10, by + 19], radius=3, fill=ACCENT)
+        d.rounded_rectangle([tx + 2, by + 10, tx + 10, by + 18], radius=3, fill=ACCENT)
         for j, line in enumerate(wrap(b, fy, tw - 32)):
-            if by > H - 110:
+            if by > 540:
                 break
-            d.text((tx + 26, by), line, font=fy,
-                   fill=TEXT if j == 0 else MUTED)
-            by += 32
-        by += 12
+            d.text((tx + 26, by), line, font=fy, fill=TEXT if j == 0 else MUTED)
+            by += 31
+        by += 10
+
+    # 旁注条（没有配音，靠这段文字讲清楚）
+    note = str(sc.get("note") or "").strip()
+    if note:
+        d.rounded_rectangle([64, 556, W - 64, 646], radius=12, fill=(18, 26, 43),
+                            outline=BORDER, width=1)
+        d.rectangle([64, 556, 70, 646], fill=ACCENT)
+        d.text((88, 568), "旁注", font=font(13, True), fill=ACCENT)
+        ny = 590
+        for line in wrap(note, font(18), W - 64 - 110)[:2]:
+            d.text((88, ny), line, font=font(18), fill=(205, 216, 235))
+            ny += 27
 
     # 底部进度条 + 页脚
     d.rectangle([0, H - 6, W, H], fill=(18, 26, 42))
     d.rectangle([0, H - 6, int(W * (idx + 1) / total), H], fill=ACCENT)
-    d.text((64, H - 44), "MiniCursor　·　一苇以航　·　MP2608016",
+    d.text((64, 664), "MiniCursor　·　一苇以航　·　MP2608016",
            font=font(14), fill=(110, 124, 148))
     right = f"{idx + 1} / {total}"
-    d.text((W - 64 - font(14).getlength(right), H - 44), right,
+    d.text((W - 64 - font(14).getlength(right), 664), right,
            font=font(14), fill=(110, 124, 148))
     return img
 
 
 # ---------------------------------------------------------------- 合成
-def build(out: Path) -> Dict[str, object]:
+def read_seconds(sc: Dict[str, object], note: str) -> float:
+    """无声版：按「要读多少字」定时长，保证每屏都读得完。"""
+    chars = len(note) + len(str(sc["title"]))
+    chars += sum(len(str(b)) for b in (sc.get("bullets") or []))  # type: ignore[union-attr]
+    return max(5.2, 3.0 + chars * 0.062)
+
+
+def build(out: Path, voice: bool = False) -> Dict[str, object]:
     BUILD.mkdir(parents=True, exist_ok=True)
     scs = scenes()
-    wavs = tts(scs, BUILD)
+    for i, sc in enumerate(scs):
+        sc["note"] = NOTES[i] if i < len(NOTES) else ""
 
+    wavs: List[Path] = tts(scs, BUILD) if voice else []
     durs: List[float] = []
     pngs: List[Path] = []
     for i, sc in enumerate(scs):
-        durs.append(max(3.4, wav_seconds(wavs[i]) + 1.0))
+        d = (max(3.4, wav_seconds(wavs[i]) + 1.0) if voice
+             else read_seconds(sc, str(sc["note"])))
+        durs.append(d)
         png = BUILD / f"slide{i:02d}.png"
         draw_scene(i, len(scs), sc).save(png)
         pngs.append(png)
@@ -333,33 +371,44 @@ def build(out: Path) -> Dict[str, object]:
     cmd = [ffmpeg, "-y", "-hide_banner", "-loglevel", "error"]
     for i in range(len(scs)):
         cmd += ["-loop", "1", "-t", f"{durs[i]:.2f}", "-i", str(pngs[i])]
-        cmd += ["-i", str(wavs[i])]
+        if voice:
+            cmd += ["-i", str(wavs[i])]
 
     parts, concat = [], ""
+    step = 2 if voice else 1
     for i, dur in enumerate(durs):
-        vi, ai = 2 * i, 2 * i + 1
+        vi = step * i
         fade_out = max(0.1, dur - 0.45)
         parts.append(
             f"[{vi}:v]scale={W}:{H},setsar=1,fps={FPS},"
             f"fade=t=in:st=0:d=0.45,fade=t=out:st={fade_out:.2f}:d=0.45,"
             f"format=yuv420p[v{i}]")
-        parts.append(
-            f"[{ai}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,"
-            f"apad=pad_dur={dur:.2f},atrim=0:{dur:.2f},asetpts=PTS-STARTPTS[a{i}]")
-        concat += f"[v{i}][a{i}]"
-    parts.append(f"{concat}concat=n={len(durs)}:v=1:a=1[v][a]")
+        if voice:
+            parts.append(
+                f"[{vi + 1}:a]aresample=44100,"
+                f"aformat=sample_fmts=fltp:channel_layouts=stereo,"
+                f"apad=pad_dur={dur:.2f},atrim=0:{dur:.2f},asetpts=PTS-STARTPTS[a{i}]")
+            concat += f"[v{i}][a{i}]"
+        else:
+            concat += f"[v{i}]"
+    parts.append(concat + (f"concat=n={len(durs)}:v=1:a=1[v][a]" if voice
+                           else f"concat=n={len(durs)}:v=1:a=0[v]"))
 
     out.parent.mkdir(parents=True, exist_ok=True)
-    cmd += ["-filter_complex", ";".join(parts), "-map", "[v]", "-map", "[a]",
-            "-c:v", "libx264", "-preset", "medium", "-crf", "20",
-            "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart",
+    cmd += ["-filter_complex", ";".join(parts), "-map", "[v]"]
+    if voice:
+        cmd += ["-map", "[a]", "-c:a", "aac", "-b:a", "128k"]
+    else:
+        cmd += ["-an"]
+    cmd += ["-c:v", "libx264", "-preset", "medium", "-crf", "20",
+            "-pix_fmt", "yuv420p", "-movflags", "+faststart",
             "-t", f"{sum(durs):.2f}", str(out)]
     p = subprocess.run(cmd, capture_output=True, text=True,
                        encoding="utf-8", errors="replace", timeout=900)
     if p.returncode != 0:
         raise SystemExit("ffmpeg 失败：\n" + (p.stderr or "")[-2000:])
 
-    return {"out": str(out), "seconds": round(sum(durs), 1),
+    return {"out": str(out), "voice": voice, "seconds": round(sum(durs), 1),
             "size_mb": round(out.stat().st_size / 1e6, 1),
             "scenes": len(scs), "per_scene": [round(x, 1) for x in durs]}
 
@@ -367,8 +416,10 @@ def build(out: Path) -> Dict[str, object]:
 def main() -> int:
     ap = argparse.ArgumentParser(description="合成演示视频（无需录屏）")
     ap.add_argument("--out", default=str(Path.home() / "Desktop" / "演示视频2.mp4"))
+    ap.add_argument("--voice", action="store_true",
+                    help="加中文旁白（默认不加：画面旁注 + 静音，适合静音播放）")
     args = ap.parse_args()
-    res = build(Path(args.out))
+    res = build(Path(args.out), voice=args.voice)
     print(json.dumps(res, ensure_ascii=False, indent=2))
     return 0
 
