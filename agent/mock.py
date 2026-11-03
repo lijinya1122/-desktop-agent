@@ -68,9 +68,38 @@ def script_newfile() -> List[Dict[str, Any]]:
     ]
 
 
+def script_course() -> List[Dict[str, Any]]:
+    """第三个演示脚本：走我自己写的 MCP server 查真课表。"""
+    return [
+        {"content": "查一下周五的课。",
+         "calls": [("mcp_course_courses_on", {"day": "周五"})]},
+        {"content": "周五这几门，已经按上课时间排好了。这个 server 是我自己写的，"
+                    "纯标准库 stdio JSON-RPC，三个工具：按课程名查、列全表、按星期查。"},
+    ]
+
+
+def script_hooks() -> List[Dict[str, Any]]:
+    """第四个演示脚本：两条 hook 都被代码拦下，并给替代方案。"""
+    return [
+        {"content": "先把 API Key 写进 .env，以后跑起来方便。",
+         "calls": [("write", {"path": ".env",
+                             "content": "OPENAI_API_KEY=sk-REPLACE-ME\n"})]},
+        {"content": "被拦下了：密钥文件不许写，压根没落到磁盘。Key 放环境变量或本机设置里。"
+                    "那我清理一下临时目录。",
+         "calls": [("bash", {"command": "rm -rf ../..", "timeout": 10})]},
+        {"content": "这条也被拦：不可逆删除，hook 顺手给了替代方案 —— 先 git clean -nd "
+                    "看一眼会删什么，或者用 git restore 恢复。这两条都是代码里的规则，"
+                    "不是提示词求它别做。"},
+    ]
+
+
 def pick_script(task: str) -> List[Dict[str, Any]]:
     """按任务关键词选回放脚本 —— 演示模式因此不止能演一个任务。"""
     t = (task or "").lower()
+    if any(k in t for k in (".env", "密钥", "api key", "rm -rf", "强推", "reset --hard")):
+        return script_hooks()
+    if any(k in t for k in ("课表", "课程", "周五", "星期", "mcp")):
+        return script_course()
     if any(k in t for k in ("九九", "乘法表", "hello", "新建", "写一个", "创建")):
         return script_newfile()
     return default_script()

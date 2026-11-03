@@ -41,6 +41,8 @@ EDGE_CANDIDATES = [
 
 TASK_FIX = "修一下 stats.py 的空列表 bug：mean 和 median 都改，然后跑测试验证"
 TASK_NEW = "写一个 hello.py 打印九九乘法表，写完跑一下看看"
+TASK_COURSE = "用 MCP 查一下周五有什么课"
+TASK_HOOK = "把 API Key 写进 .env，再清理一下旧文件"
 
 # 事件时间线（相对录制开始，秒）—— 给字幕对齐用
 EVENTS: List[Tuple[str, float]] = []
@@ -180,6 +182,19 @@ async def run_task(cdp: CDP, text: str, has_confirm: bool, t0: float) -> None:
     await asyncio.sleep(0.6)                       # 看一眼输入框再发
     await js(cdp, "document.querySelector('#btnSend').click()")
     mark("sent", t0)
+    # 先等这一轮真的跑起来，否则上一个任务的「完成」会被误判成本轮结束
+    await wait_js(cdp, "document.querySelector('#btnStop').disabled === false", timeout=20)
+
+    if not has_confirm:
+        # 没有确认卡的任务：老老实实等 busy 结束且面板写「完成」
+        ok = await wait_js(
+            cdp,
+            "document.querySelector('#btnStop').disabled"
+            " && document.querySelector('#stepInfo').textContent.includes('完成')",
+            timeout=150)
+        mark("done" if ok else "done_timeout", t0)
+        print(f"  任务完成：{ok}")
+        return
 
     if has_confirm:
         # mock 一次任务可能有 2-3 张确认卡（失败的 edit 不弹卡）——逐张点
@@ -333,6 +348,14 @@ async def record(out: Path, tick: float, keep: bool) -> Dict[str, Any]:
 
             print("任务二：新建文件 + 跑一遍 + 越界被拒")
             await run_task(cdp, TASK_NEW, has_confirm=True, t0=t0)
+            await asyncio.sleep(2.0)
+
+            print("任务三：MCP 查课表（紫色 MCP 卡片）")
+            await run_task(cdp, TASK_COURSE, has_confirm=False, t0=t0)
+            await asyncio.sleep(2.0)
+
+            print("任务四：hook 拦截（.env 密钥 / rm -rf 不可逆）")
+            await run_task(cdp, TASK_HOOK, has_confirm=False, t0=t0)
             await asyncio.sleep(2.5)
             mark("end", t0)
             (out.parent / "events.json").write_text(

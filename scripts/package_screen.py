@@ -83,20 +83,30 @@ def make_ass(events, total: float, path: Path) -> None:
                 return v
         return default
 
-    sent1 = t("sent", 13.6)
-    c1 = next((v for k, v in events if k.startswith("confirm_clicked_")), sent1 + 10)
-    done1 = [v for k, v in events if k == "done"][0] if any(k == "done" for k, _ in events) else 43
-    sent2 = [v for k, v in events if k == "sent"][1] if sum(1 for k, _ in events if k == "sent") > 1 else 47
-    done2 = [v for k, v in events if k == "done"][1] if sum(1 for k, _ in events if k == "done") > 1 else 70
+    sents = [v for k, v in events if k == "sent"]
+    dones = [v for k, v in events if k == "done"]
+    confirms = [v for k, v in events if k.startswith("confirm_clicked_")]
+
+    def at(seq, i, default):
+        return seq[i] if len(seq) > i else default
+
+    s1 = at(sents, 0, 13.0)
+    s2 = at(sents, 1, 40.0)
+    s3 = at(sents, 2, 70.0)
+    s4 = at(sents, 3, 82.0)
+    c1 = at(confirms, 0, s1 + 12)
+    d1 = at(dones, 0, s2 - 6)
+    d4 = at(dones, 3, at(dones, -1, total - 8) if dones else total - 8)
     end = total
 
     lines = [
-        (0.4, sent1 - 0.2, "真实运行录屏 · 演示模式：模型离线回放，工具是真执行"),
-        (sent1 + 0.1, c1 - 0.3, "任务一：修空列表 bug —— 第一次 edit 直接失败：old 出现两次，工具拒绝猜"),
-        (c1 + 0.4, done1 + 0.2, "补全函数签名后恢复；三处修改三张确认卡：写操作先给 diff，点了执行才落盘"),
-        (done1 + 0.6, sent2 - 0.2, "测试 4/4 通过 —— 说改了就真改了"),
-        (sent2 + 0.1, done2 + 0.2, "任务二：写 hello.py 跑九九乘法表；最后越界读 ../README.md 被工具层拒绝"),
-        (done2 + 0.6, end, "两条任务全部由真实工具执行 · scripts/record_demo.py 一键复现"),
+        (0.4, s1 - 0.2, "真实运行录屏 · 演示模式：模型离线回放，工具是真执行"),
+        (s1 + 0.1, c1 - 0.3, "任务一：修空列表 bug —— 第一次 edit 直接失败：old 出现两次，工具拒绝猜"),
+        (c1 + 0.4, s2 - 0.2, "补全签名后恢复；写操作先给红绿 diff、点「执行」才落盘 —— 测试 4/4 通过"),
+        (s2 + 0.1, s3 - 0.2, "任务二：写 hello.py 跑九九乘法表；越界读 ../README.md 被工具层拒绝"),
+        (s3 + 0.1, s4 - 0.2, "任务三：MCP 查课表 —— 自己写的 stdio server，紫色标签就是 MCP 工具调用"),
+        (s4 + 0.1, d4 + 0.3, "任务四：hook 拦截 —— 写 .env 被拒、rm -rf 被拦并给替代方案，两条都是代码规则"),
+        (d4 + 0.6, end, "四个任务全部真实工具执行 · 自检 13/13 · 冒烟 8/8 · scripts/record_demo.py 一键复现"),
     ]
 
     head = """[Script Info]
