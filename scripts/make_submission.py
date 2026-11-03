@@ -114,7 +114,7 @@ def main() -> int:
     n = copy_source(dest / "源码")
 
     for name in ("README.md", "report.md", "mcp.json", "requirements.txt",
-                 "pyproject.toml", "desktop-agent.spec"):
+                 "pyproject.toml", "desktop-agent.spec", "第一次运行请看这里.txt"):
         src = ROOT / name
         if src.exists():
             shutil.copy2(src, dest / name)
