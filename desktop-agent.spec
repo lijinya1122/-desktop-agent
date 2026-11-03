@@ -27,7 +27,10 @@ a = Analysis(
     pathex=["."],
     binaries=binaries,
     datas=datas + [("ui", "ui"), ("mcp.json", "."), ("workspace", "workspace"),
-                   ("examples", "examples"), (".env.example", ".")],
+                   ("examples", "examples"), (".env.example", "."),
+                   # v1.1/v1.2：技能目录、项目地图、首次运行说明都要进包
+                   ("skills", "skills"), ("AGENTS.md", "."),
+                   ("第一次运行请看这里.txt", ".")],
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
