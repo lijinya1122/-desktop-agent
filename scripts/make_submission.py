@@ -51,25 +51,39 @@ README_TXT = """========== 大作业提交说明 ==========
 
 {header}
 
-【两个链接】（评分看的就是这两个）
+【三个链接】（评分看的就是这三个）
   仓库（public）：{repo}
+  版本标签：{repo}/tags            → v1.0 基线 / v1.1 技能 / v1.2 定制层
   Release：{release}
 
 【目录内容】
-  README.md     三步启动、工具规格、护栏说明
-  report.md     报告：架构取舍 / 再加一个工具 / 最不满意的地方
-  源码/         完整项目源码（agent/ server/ ui/ examples/ scripts/ workspace/）
+  README.md     三步启动、工具规格、技能与 hook、护栏说明
+  report.md     报告：架构取舍 / 判断错误 / 增量作业三节
+  AGENTS.md     项目地图（会被注入 system prompt 的交付物本身）
+  源码/         完整项目源码（agent/ app/ skills/ server/ ui/ examples/ scripts/ workspace/）
   安装包/       MiniCursor_1.0.0_Windows_x64_Setup.exe   ← 双击安装（推荐）
                 MiniCursor_1.0.0_Windows_x64.zip        ← 解压即用备用
-  docs/         trace.md（真实运行记录，含失败与恢复）
-                build.md（打包步骤）
-                shot1~4*.png（运行截图）
+  docs/         trace.md（真实运行记录）、failures.md（失败与恢复）、
+                stress_test.md、build.md、demo_script.md（5 分钟演示脚本）、截图
+  演示视频.mp4  5 分钟录屏演示（演示脚本见 docs/demo_script.md）
+
+【增量作业（v1.1 / v1.2）】
+  skills/                 四个技能：run-tests（纯提示词）、review-diff（带脚本）、
+                          course-lookup（走 MCP）、package-release（打包流程）
+  skill_report.json       程序打印：catalog 183 / full 1162 / ratio 6.3 / 误触发 0
+  custom_report.json      程序打印：AGENTS.md 3763B 两层 / 拦截 3 条 /
+                          自动测试 4 次（红→绿 2）/ reviewer 主上下文 +58 token
+  agent/hooks.py          三条 hook 是代码：拦密钥文件、拦不可逆命令（带替代方案）、写完自动测试
+  agent/reviewer.py       只读 reviewer 子 agent，只回最后一条消息
+  开关：ENABLE_SKILLS=0 关技能；ENABLE_HOOKS=0 关 hook（现场可验）
+  复现：python -m app.inspect skills|custom --out xxx_report.json
 
 【怎么运行】
   方式一（推荐）：双击 安装包 里的 Setup.exe → 下一步 → 装完自动启动
   方式二：解压 zip → 双击 MiniCursor.exe（不需要装 Python）
-  两种都不需要 Python 环境。首次启动在「设置」里填 API Key；
+  两种都不需要 Python 环境。首次启动在「设置」里填自己的 API Key；
   没 Key 勾选「演示模式」也能完整走一遍（读文件 → edit 失败 → 恢复 → 跑测试）。
+  详见 第一次运行请看这里.txt
 
 【验证】
   python scripts/selftest.py   → 13/13
@@ -88,6 +102,9 @@ def copy_source(dst: Path) -> int:
             (dst / rel).mkdir(parents=True, exist_ok=True)
             continue
         if p.suffix == ".log":
+            continue
+        # installer 里的安装包已经在「安装包/」放了一份，源码里只留 .iss 脚本
+        if "installer" in rel.parts and p.suffix.lower() in (".exe", ".zip", ".7z"):
             continue
         (dst / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(p, dst / rel)
