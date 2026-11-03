@@ -76,3 +76,96 @@ python app.py                   # 双击体验（没 Key 可在设置里开「�
 
 真实压测记录见 `docs/stress_test.md`（用真 Key 跑的 5 类任务 + 3 个真发现），
 失败与恢复的真实输出见 `docs/failures.md`。
+
+---
+
+# 增量作业（v1.1 / v1.2）
+
+三个增量：技能系统、定制层、（选做）常驻。下面所有数字都是
+`python -m app.inspect skills|custom` 打出来的 JSON，不是手写的表格：
+
+```
+skill_report.json    catalog_tokens 183 / full_tokens 1162 / ratio 6.3 / trials 8 条 / false_positive 0
+custom_report.json   agents_md 3763B（global+project）/ denied 3 / autotest 4 次 r2g 2 / reviewer +58 token
+```
+
+## 1. 每个增量做完之后，哪件事变快了
+
+**技能系统 —— 省的是「每轮都要重付」的钱。**
+4 个技能，目录（名字 + 一句话）只占 **183 token**，正文合计 **1162 token**，**ratio 6.3**。
+也就是说：以前把流程全塞进 system prompt，每一轮对话都要先付 1162 token 才轮到我的任务；
+现在只有真正调用 `use_skill` 的那一轮付正文，其余轮次付 183。二十轮的会话差约 2 万 token。
+更直接的收益是**重复纠正消失**：`run-tests` 里写了「先 `-q` 不要 `-v`，最多看 3 个失败」，
+它不再把 80 行 traceback 贴给我；`review-diff` 自带 `collect_diff.py`，输出固定 40 行以内。
+
+**定制层 —— 省的是「我盯着它」的时间。**
+`custom_report.json` 里 `denied: 3`，三条都是真的被拦下并给出替代方案：
+写 `.env` → 「密钥不入库，放环境变量」；`rm -rf build/` → 「先 `git clean -nd` 看会删什么」；
+`git push --force` → 「用 `git revert` 造新提交」。
+以前这三件事我要在对话里盯着，现在它连试都试不了。
+
+**自动测试回注 —— 从「它说改好了」变成「测试说改好了」。**
+`autotest: runs 4 / red 2 / green 2 / red_to_green 2 / injected_lines 4`。
+四次里有两次是它先改错（红）→ 照着红字改对（绿）。回注只有 **4 行**（哪个用例 / 期望 / 实际），
+而完整 traceback 是 60–80 行 —— 这个差别决定了 `red_to_green` 能不能在同一次对话里发生。
+
+**reviewer 子 agent —— 省的是主上下文。**
+一次审查，diff 和文件内容在子 agent 里消化了 **13,123 token**，
+主对话只增加了 **58 token**（`main_context_delta: 58`，上限 500），结论是 2 条问题。
+如果让主 agent 自己读那 8 个文件的 diff，这 13k token 会一直躺在上下文里，后面每一步都在为它付钱。
+
+## 2. 一次判断错误
+
+**我以为「reviewer 拿不到 diff」是环境问题，其实是我自己写的白名单把它拒了。**
+
+第一次跑 `python -m app.inspect custom`，`reviewer.changed_files` 是空数组、`issues_found: 0`、
+`subagent_tokens: 67`。我的判断是：这台机器的 git 不在 PATH 里（打包时确实踩过），
+所以 reviewer 的 `subprocess` 调不到 git。于是我加了 `agent/gitutil.py` 去常见路径里找 `git.exe`。
+
+改完重跑，**还是 0**。这次才把 `tool_bash` 的返回值打出来看，第一行赫然是：
+
+```
+拒绝：reviewer 的 bash 只允许 git diff / git show / git status / git log
+```
+
+原因很蠢：白名单正则写的是 `^\s*git\s+(diff|show|status|log)`，
+而我自己在 `_collect()` 里调用的是 `git -C . show ...` —— `-C .` 卡在中间，正则不匹配。
+**也就是说，我先写了一个只读白名单，然后被自己的白名单挡住了。**
+
+改法不是放宽到「含 git 就行」（那就等于没有白名单），而是明确允许全局参数：
+
+```python
+r"^\s*git\s+(?:-[Cc]\s+\S+\s+|--no-pager\s+)*(diff|show|status|log)\b"
+```
+
+教训：**工具被拒绝时，第一件事是看拒绝理由，不是猜环境。**
+`gitutil.py` 那一步并不白做（打包版确实需要它），但如果我先读返回值，
+就不会先花 20 分钟去修一个不存在的问题。
+
+顺带记一个同类错误：`autotest` 场景我原本设计成「先修 `mean` → 应该变绿」，
+跑出来却是 `red 3 / green 1`。因为 `test_stats.py` 有 4 个用例，两个空列表用例都要过，
+只修 `mean` 仍然是红 —— 我把「一个 bug」想成了「一个测试」。改成一次修两处后，
+才拿到设计的 `4 次 / 红 2 / 绿 2 / 红→绿 2`。
+
+## 3. 如果只保留一个增量，留哪个
+
+**留 `PostToolUse` 那条自动测试 hook。**
+
+理由不是它最聪明，而是它**每一天都会触发**，而且它改的是「事实」而不是「说法」：
+`AGENTS.md` 和技能都只是让模型「应该」这么做（软约束，它一忙就忘）；
+hook 是代码，写在 `before_tool()` / `after_tool()` 里，模型绕不过去。
+`red_to_green: 2` 这两次，如果没有自动测试回注，模型会宣布「已修复」，我要自己跑一遍才发现没修好 ——
+这正是这个作业想解决的「它说做完了」问题。
+
+技能系统排第二：它的价值随项目重复度增长，但这个仓库只有 4 个技能，
+省下的 token 是 979/轮，很实在，但不如「它骗我一次」的代价大。
+reviewer 排第三：它救我一次，但只在交付前那一次。
+
+## 附：怎么复现
+
+```powershell
+.venv\Scripts\python.exe -m app.inspect skills --out skill_report.json
+.venv\Scripts\python.exe -m app.inspect custom --out custom_report.json
+$env:ENABLE_SKILLS=0; .venv\Scripts\python.exe -m app.inspect skills   # 关掉技能：ratio 变 0、技能列表为空
+$env:ENABLE_HOOKS=0;  .venv\Scripts\python.exe -m app.inspect custom   # 关掉 hook：denied 变空数组
+```

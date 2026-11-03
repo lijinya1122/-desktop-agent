@@ -125,7 +125,8 @@ class SkillRegistry:
                 desc = meta.get("description", "").strip()
                 if not name or not desc:
                     continue
-                has_scripts = (md.parent / "scripts").is_dir() or "scripts/" in body
+                # 只认目录：正文里提到 scripts/ 不等于自带脚本
+                has_scripts = (md.parent / "scripts").is_dir()
                 uses_mcp = ("mcp_" in body) or ("MCP" in body.upper() and "mcp" in body.lower())
                 reg.skills[name] = Skill(
                     name=name, description=desc, body=body.strip(),

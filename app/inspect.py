@@ -48,7 +48,8 @@ def _dump(data: dict, out: str | None, title: str) -> None:
 
 # ---------------------------------------------------------------- skills
 def cmd_skills(args) -> int:
-    reg = skmod.SkillRegistry.load(ROOT)
+    # 开关关掉时连目录都不读：验收要能看出 before/after 的差别
+    reg = skmod.SkillRegistry.load(ROOT) if skmod.enabled() else skmod.SkillRegistry()
     trials = []
     fp = 0
     for query, expected in TRIALS:
@@ -92,6 +93,8 @@ def cmd_skills(args) -> int:
 # ---------------------------------------------------------------- custom
 def _autotest_scenario() -> dict:
     """真跑一遍：先红 → 改对 → 绿 → 再改错 → 红 → 再改对 → 绿。"""
+    if not hooks.enabled():
+        return {"runs": 0, "red": 0, "green": 0, "red_to_green": 0, "injected_lines": 0}
     tmp = Path(tempfile.mkdtemp(prefix="autotest-")) / "ws"
     tmp.mkdir(parents=True)
     for f in ("stats.py", "test_stats.py"):

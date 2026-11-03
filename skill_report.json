@@ -1,0 +1,103 @@
+{
+  "generated_by": "python -m app.inspect skills",
+  "skills_enabled": true,
+  "skills": [
+    {
+      "name": "course-lookup",
+      "has_scripts": false,
+      "uses_mcp": true,
+      "header_tokens": 52,
+      "body_tokens": 281,
+      "path": "skills/course-lookup/SKILL.md"
+    },
+    {
+      "name": "package-release",
+      "has_scripts": false,
+      "uses_mcp": false,
+      "header_tokens": 42,
+      "body_tokens": 362,
+      "path": "skills/package-release/SKILL.md"
+    },
+    {
+      "name": "review-diff",
+      "has_scripts": true,
+      "uses_mcp": false,
+      "header_tokens": 46,
+      "body_tokens": 292,
+      "path": "skills/review-diff/SKILL.md"
+    },
+    {
+      "name": "run-tests",
+      "has_scripts": false,
+      "uses_mcp": false,
+      "header_tokens": 44,
+      "body_tokens": 228,
+      "path": "skills/run-tests/SKILL.md"
+    }
+  ],
+  "catalog_tokens": 183,
+  "full_tokens": 1162,
+  "disclosure_ratio": 6.3,
+  "trials": [
+    {
+      "query": "帮我跑一下测试",
+      "expected": "run-tests",
+      "hit": "run-tests",
+      "ok": true
+    },
+    {
+      "query": "测试没过，为什么挂了",
+      "expected": "run-tests",
+      "hit": "run-tests",
+      "ok": true
+    },
+    {
+      "query": "跑测试看看",
+      "expected": "run-tests",
+      "hit": "run-tests",
+      "ok": true
+    },
+    {
+      "query": "把这段 diff 审一遍",
+      "expected": "review-diff",
+      "hit": "review-diff",
+      "ok": true
+    },
+    {
+      "query": "review 一下刚才的改动",
+      "expected": "review-diff",
+      "hit": "review-diff",
+      "ok": true
+    },
+    {
+      "query": "查课表：周五什么时候上课",
+      "expected": "course-lookup",
+      "hit": "course-lookup",
+      "ok": true
+    },
+    {
+      "query": "今天天气怎么样",
+      "expected": null,
+      "hit": null,
+      "ok": true
+    },
+    {
+      "query": "帮我写一封请假邮件",
+      "expected": null,
+      "hit": null,
+      "ok": true
+    }
+  ],
+  "false_positive": 0,
+  "thresholds": {
+    "skills_min": 3,
+    "ratio_min": 5,
+    "trials_min": 6,
+    "false_positive_max": 0
+  },
+  "shapes": [
+    "mcp",
+    "prompt",
+    "scripts"
+  ]
+}

@@ -58,7 +58,9 @@ class Reviewer:
 
     # ------------------------------------------------------------ 只读工具
     def tool_bash(self, command: str) -> str:
-        if not re.match(r"^\s*git\s+(diff|show|status|log)\b", command):
+        # 允许 `git -C . show` / `git --no-pager diff` 这类带全局参数的写法
+        if not re.match(r"^\s*git\s+(?:-[Cc]\s+\S+\s+|--no-pager\s+)*(diff|show|status|log)\b",
+                        command):
             return "拒绝：reviewer 的 bash 只允许 git diff / git show / git status / git log"
         self.tool_calls.append({"tool": "bash", "arg": command})
         argv = shlex.split(command)

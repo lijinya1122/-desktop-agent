@@ -3,9 +3,6 @@
 > 由 `python scripts/selftest.py` 自动生成 —— 工具是真的、失败是真的、diff 是真的。
 > 模型用的是 `agent/mock.py` 的离线回放（不联网），因此这份 trace 任何人都能复现。
 
-> 想看**工具层的失败与恢复**（edit 不唯一 / 路径越界 / bash 超时 / old 不存在，各带真实报错）：
-> 见 [`docs/failures.md`](failures.md)，由 `python scripts/failure_demo.py` 生成。
-
 任务：**让 mean 和 median 对空列表抛 ValueError，然后跑测试验证**
 
 ```
@@ -18,14 +15,14 @@
        
         Directory of C:\Users\Lenovo\Desktop\2026.9-python\desktop-agent\workspace
        
-       2026/10/29  06:06    <DIR>          .
-       2026/10/27  23:09    <DIR>          ..
-       2026/10/29  06:06               308 hello.py
+       2026/11/01  13:54    <DIR>          .
+       2026/11/03  15:49    <DIR>          ..
+       2026/10/31  09:37               308 hello.py
        2026/10/27  15:06               562 README.md
-       2026/10/29  06:06               434 stats.py
-       2026/10/29  06:06             1,091 test_stats.py
-                      4 File(s)          2,395 bytes
-                      2 Dir(s)  66,749,423,616 bytes free
+       2026/11/01  13:58               414 stats.py
+       2026/10/31  09:37             1,091 test_stats.py
+                      4 File(s)          2,375 bytes
+                      2 Dir(s)  71,827,447,808 bytes free
        [exit_code=0]
 [step 2/10]
   (model) 读一下 stats.py。
@@ -58,11 +55,17 @@
 [step 4/10]
   (model) old 不唯一，我把它写长一点，带上函数签名。
   -> edit({"path": "stats.py", "old": "def mean(nums):\n    if not nums:\n        return 0", "new": "def mean(nums):\n    if not nums:\n        raise ValueError(\"nums 不能)
+  !! 自动测试：python test_stats.py → 失败：1 红 / 3 绿
   <- [ok ] 已修改 stats.py：替换 1 处，行数变化 +0
+       [自动测试] python test_stats.py → 失败：1 红 / 3 绿
+         FAIL test_median_empty - median([]) 应该抛 ValueError，而不是返回 0
+         先照着失败信息改，不要删测试或改断言。
 [step 5/10]
   (model) median 同样处理。
   -> edit({"path": "stats.py", "old": "def median(nums):\n    if not nums:\n        return 0", "new": "def median(nums):\n    if not nums:\n        raise ValueError(\"num)
+  !! 自动测试：python test_stats.py → 通过（4 绿）
   <- [ok ] 已修改 stats.py：替换 1 处，行数变化 +0
+       [自动测试] python test_stats.py → 通过（4 绿）
 [step 6/10]
   (model) 跑一遍测试验证。
   -> bash({"command": "python test_stats.py", "timeout": 60})

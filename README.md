@@ -124,6 +124,48 @@ python -m agent.cli "读一下工作区里有什么文件" --mock
 
 ---
 
+## 技能（`skills/`，v1.1）
+
+技能是「存在文件里、按需加载的流程」，不是更长的提示词。**渐进披露**：
+
+| | token | 什么时候进上下文 |
+|---|---|---|
+| 目录（4 个技能的 name + description） | **183** | 每一轮 |
+| 正文（4 个 SKILL.md 合计） | **1162** | 只在调 `use_skill(name)` 的那一轮 |
+
+比例 **6.3**（`skill_report.json` 里 `disclosure_ratio`）。四个技能三种形态：
+
+| 技能 | 形态 | 干什么 |
+|---|---|---|
+| `run-tests` | 纯提示词 | 跑测试、只读 3 个失败、总结成三行，不顺手改代码 |
+| `review-diff` | 提示词 + `scripts/collect_diff.py` | 拿 40 行以内的 diff 摘要，按五条清单挑毛病 |
+| `course-lookup` | 提示词 + MCP | 编排已挂载的 `mcp_course_*` 查真实课表 |
+| `package-release` | 纯提示词 | 打包三步：pyinstaller → 压缩 → ISCC，含「先杀旧进程」的坑 |
+
+触发靠 `description` 里的触发语（如 `"跑一下测试"`、`"这段 diff"`），不靠目录名猜。
+关掉：`ENABLE_SKILLS=0`。
+
+## 定制层（`AGENTS.md` + hooks + reviewer，v1.2）
+
+- **AGENTS.md 两层注入**：`~/.desktop-agent/AGENTS.md`（我的口味）→ 项目根 `AGENTS.md`（这个仓库怎么跑），
+  合并后拼进 system prompt；项目那份 3.7 KB，写的是地图不是文档。
+- **三条 hook 都是代码**（`agent/hooks.py`），不是提示词里的建议：
+  - 写 `.env` / `*.pem` / `*.key` → 拒绝，理由「密钥不入库，用环境变量」
+  - `rm -rf` / `git push --force` / `git reset --hard` → 拒绝**并给替代方案**（`git revert` / `git clean -nd`）
+  - `write` / `edit` 之后 → 自动跑测试，只回注 **4 行摘要**（哪个用例 / 期望 / 实际），不回整段 traceback
+- **reviewer 子 agent**（`agent/reviewer.py`）：只读（`read` + 只认 `git diff/show/status/log` 的 bash），
+  固定五条清单，只回最后一条消息 —— 一次审查在子 agent 里消化 13k token，主上下文只 +58。
+- 关掉：`ENABLE_HOOKS=0`。
+
+## 验收（数字全部由程序打印，不手写）
+
+```powershell
+python -m app.inspect skills --out skill_report.json   # 技能：ratio / trials / false_positive
+python -m app.inspect custom --out custom_report.json  # 定制：agents_md / denied / autotest / reviewer
+```
+
+---
+
 ## 五道护栏
 
 | 风险 | 护栏 | 位置 |
@@ -146,9 +188,16 @@ desktop-agent/
 ├── agent/                  循环 + 四个工具（能脱离界面单独跑）
 │   ├── loop.py             ReAct 循环与三道护栏
 │   ├── tools.py            read / write / edit / bash
+│   ├── skills.py           技能：目录常驻，use_skill 才加载正文
+│   ├── hooks.py            三条硬约束 + 自动测试回注
+│   ├── agents_md.py        AGENTS.md 两层注入
+│   ├── reviewer.py         只读 reviewer 子 agent
 │   ├── llm.py              OpenAI 兼容流式客户端
 │   ├── mcp.py              MCP stdio 客户端
-│   ├── prompts.py / mock.py / cli.py / config.py
+│   ├── prompts.py / mock.py / cli.py / config.py / gitutil.py
+├── skills/                 四个技能（可带走：复制目录就能用）
+├── app/inspect.py          验收命令（skills / custom）
+├── AGENTS.md               项目地图（会被注入 system prompt）
 ├── server/app.py           FastAPI + WebSocket 事件流
 ├── ui/                     index.html / app.js / style.css
 ├── examples/mcp_demo_server.py
