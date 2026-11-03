@@ -14,8 +14,18 @@ REMINDER = (
 )
 
 
-def system_prompt(workspace: str, tree: List[str], os_name: str) -> str:
+def system_prompt(workspace: str, tree: List[str], os_name: str,
+                  skills_catalog: str = "", agents_md_text: str = "") -> str:
     tree_txt = "\n".join(tree[:120]) if tree else "（空目录）"
+    skills_block = ""
+    if skills_catalog.strip():
+        skills_block = f"""
+<skills>
+下面只是技能目录（名字 + 一句话），正文没有加载。判断确实需要时，
+调 use_skill(name) 把该技能的完整步骤取回来再照做 —— 不要凭名字猜步骤。
+
+{skills_catalog}
+</skills>"""
     return f"""<role>
 你是一个在用户本机工作区里干活的编程智能体（类似 Cursor 的 Agent 模式）。
 你通过工具读代码、改代码、跑验证，一步一步把事情做完。你不会客套，回答简短、给证据。
@@ -27,6 +37,7 @@ def system_prompt(workspace: str, tree: List[str], os_name: str) -> str:
 当前工作区文件（部分）：
 {tree_txt}
 </context>
+{agents_md_text}{skills_block}
 
 <task>
 用户会给你一个具体的编码任务。你要自己决定下一步做什么，直到任务真正完成。

@@ -14,10 +14,11 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
-from agent import prompts
+from agent import agents_md, hooks, prompts
 from agent.config import Settings
 from agent.llm import LLMClient, LLMError, messages_tokens
 from agent.mcp import MCPManager, is_mcp_tool
+from agent import skills as skmod
 from agent import tools as tmod
 from agent.tools import ToolError, ToolResult, _unified_diff
 
@@ -118,14 +119,31 @@ class AgentLoop:
         tmod.set_workspace(s.workspace_path())
         root = s.workspace_path()
         tree = workspace_tree(root)
-        system = prompts.system_prompt(str(root), tree, f"{platform.system()} {platform.release()}")
+
+        # 技能：只放目录（名字 + 一句话），正文按需加载
+        self.skills = (skmod.SkillRegistry.load(root) if skmod.enabled()
+                       else skmod.SkillRegistry())
+        catalog = self.skills.catalog()
+        # 定制：全局 + 项目两层 AGENTS.md
+        amd = agents_md.load(root) if agents_md.enabled() else agents_md.AgentsMd()
+
+        system = prompts.system_prompt(str(root), tree, f"{platform.system()} {platform.release()}",
+                                       skills_catalog=catalog, agents_md_text=amd.prompt_block())
 
         messages: List[Dict[str, Any]] = [{"role": "system", "content": system}]
         messages.extend(history or self.history)
         messages.append({"role": "user", "content": prompts.user_task(task)})
 
-        schemas = list(tmod.SCHEMAS) + self.mcp.schemas()
-        await emit({"type": "status", "text": f"已挂载 {len(schemas)} 个工具（内置 4 + MCP {len(schemas) - 4}）"})
+        skill_schemas = self.skills.schemas() if self.skills.skills else []
+        schemas = list(tmod.SCHEMAS) + skill_schemas + self.mcp.schemas()
+        n_builtin = len(tmod.SCHEMAS)
+        n_skill = len(skill_schemas)
+        await emit({"type": "status",
+                    "text": f"已挂载 {len(schemas)} 个工具（内置 {n_builtin} + 技能 {n_skill} + "
+                            f"MCP {len(schemas) - n_builtin - n_skill}）"
+                            + (f"；技能 {len(self.skills.skills)} 个、AGENTS.md "
+                               f"{'已注入 ' + '+'.join(amd.layers) if amd.found else '未找到'}"
+                               if (self.skills.skills or amd.found) else "")})
 
         deadline = time.time() + max(30, int(s.timeout))
         answer = ""
@@ -200,10 +218,37 @@ class AgentLoop:
                              "arguments": args, "step": step,
                              "mcp": is_mcp_tool(name)})
 
+                # 技能加载：这一步只把正文取回来，不碰文件
+                if name == "use_skill":
+                    sname = str(args.get("name", ""))
+                    obs = self.skills.load_body(sname)
+                    ok = bool(self.skills.get(sname))
+                    await _emit({"type": "tool_result", "id": call_id, "name": name,
+                                 "ok": ok, "text": obs[:4000], "diff": "",
+                                 "skill": sname, "ms": 0})
+                    messages.append({"role": "tool", "tool_call_id": call_id,
+                                     "name": name, "content": obs})
+                    rec.calls.append({"name": name, "args": args, "ok": ok,
+                                      "observation": obs[:2000]})
+                    continue
+
                 # 循环检测：连续同样调用 -> 提醒模型换路
                 sig = f"{name}:{json.dumps(args, ensure_ascii=False, sort_keys=True)}"
                 repeat = repeat + 1 if sig == last_call_sig else 1
                 last_call_sig = sig
+
+                # hook 前置：硬约束（密钥文件、不可逆命令）—— 在问人之前就拦掉
+                deny = hooks.pre_tool(name, args)
+                if deny:
+                    obs = f"[hook 拒绝] {deny}"
+                    await _emit({"type": "tool_result", "id": call_id, "name": name,
+                                 "ok": False, "text": obs, "diff": "", "denied": True,
+                                 "ms": 0})
+                    messages.append({"role": "tool", "tool_call_id": call_id,
+                                     "name": name, "content": obs})
+                    rec.calls.append({"name": name, "args": args, "ok": False,
+                                      "observation": obs})
+                    continue
 
                 # 确认闸门：写操作先给 diff
                 if (self.settings.confirm_writes and name in tmod.WRITE_TOOLS
@@ -230,6 +275,13 @@ class AgentLoop:
                     obs, ok, diff = f"工具报错：{e}", False, ""
                 except Exception as e:  # 兜底：任何异常都要变成模型看得懂的话
                     obs, ok, diff = f"工具异常：{type(e).__name__}: {e}", False, ""
+
+                # hook 后置：写操作之后自动跑测试，只回三行摘要（不回整段 traceback）
+                summary = hooks.post_tool(name, args, ok, root)
+                if summary:
+                    obs = obs + "\n" + summary
+                    await _emit({"type": "warning",
+                                 "text": summary.splitlines()[0].replace("[自动测试] ", "自动测试：")})
 
                 obs = tmod._truncate(obs, int(s.max_tool_chars))
                 await _emit({
