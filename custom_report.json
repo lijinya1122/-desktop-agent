@@ -43,23 +43,18 @@
   },
   "reviewer": {
     "runs": 1,
-    "issues_found": 2,
-    "main_context_delta": 58,
-    "subagent_tokens": 13123,
+    "issues_found": 1,
+    "main_context_delta": 30,
+    "subagent_tokens": 917,
     "changed_files": [
-      "AGENTS.md",
-      "agent/agents_md.py",
-      "agent/gitutil.py",
-      "agent/hooks.py",
-      "agent/loop.py",
-      "agent/prompts.py",
-      "agent/reviewer.py",
-      "agent/skills.py"
+      "scripts/make_submission.py",
+      "scripts/make_video.py",
+      "scripts/package_screen.py",
+      "scripts/record_demo.py"
     ],
     "final_message": [
-      "审查完成：2 个问题",
-      "1. 新增代码里有 `except: pass` → 吞掉异常 → 至少 log 或抛 AppError",
-      "2. 4. 新逻辑有没有测试覆盖    5. 有没有调试残留（print( / TODO / breakpoint()） → 调试残留 → 提交前删掉或换成日志"
+      "审查完成：1 个问题",
+      "1. scripts/make_submission.py → 改了源码但没动测试 → 至少补一条覆盖新分支的用例"
     ]
   },
   "thresholds": {

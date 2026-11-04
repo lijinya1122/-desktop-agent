@@ -154,7 +154,7 @@ python -m agent.cli "读一下工作区里有什么文件" --mock
   - `rm -rf` / `git push --force` / `git reset --hard` → 拒绝**并给替代方案**（`git revert` / `git clean -nd`）
   - `write` / `edit` 之后 → 自动跑测试，只回注 **4 行摘要**（哪个用例 / 期望 / 实际），不回整段 traceback
 - **reviewer 子 agent**（`agent/reviewer.py`）：只读（`read` + 只认 `git diff/show/status/log` 的 bash），
-  固定五条清单，只回最后一条消息 —— 一次审查在子 agent 里消化 13k token，主上下文只 +58。
+  固定五条清单，只回最后一条消息 —— 一次审查在子 agent 里消化 13k token，主上下文只 +30（上限 500，随 diff 大小浮动）。
 - 关掉：`ENABLE_HOOKS=0`。
 
 ## 验收（数字全部由程序打印，不手写）

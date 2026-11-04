@@ -89,3 +89,50 @@
 用 PowerPoint 也能交：把 `docs/shot1~4*.png` 四张截图按顺序放进幻灯片，
 每页配上面那段旁白文字，另存为 **MP4**（PPT 自带「导出 → 创建视频」）。
 这算「演示材料」，但没有真跑起来的视频有说服力 —— 优先录屏。
+
+---
+
+# 增量演示（v1.1 / v1.2 · 对应评分表的 6 项）
+
+> 接在 v1.0 演示之后，或单独来一遍。全程可用演示模式（不用 Key）。
+> 交付视频 `演示视频.mp4` 已覆盖第 3 项；1、2、4、5 建议现场演。
+
+## 1. 30 秒　技能目录
+
+**画面**：`ls skills/` —— 四个技能，三种形态：
+`run-tests`（纯提示词）/ `review-diff`（带 `scripts/collect_diff.py`）/
+`course-lookup`（走 MCP）/ `package-release`（打包流程）。
+
+**旁白**：启动时 system prompt 只放目录（每个技能一句话，183 token）；
+模型判断需要时调 `use_skill`，正文 1162 token 那一轮才注入 —— 比例 6.3 倍。
+8 条触发试验（含 2 条不该触发的反例）误触发 0。数字来自 `python -m app.inspect skills`。
+
+## 2. 90 秒　开关对比（评分表要求现场关）
+
+```bash
+ENABLE_SKILLS=0 python -m app        # 关掉技能系统
+python -m app.inspect skills         # ratio → 0，skills → []
+```
+
+**旁白**：同一份代码两次运行 —— before/after 都在 JSON 里，不是两个版本的截图。
+
+## 3. 60 秒　hook 拦截（视频 1:06 处）
+
+让它 `write .env` → 拒绝，理由「密钥不入库，放环境变量」；
+让它 `rm -rf` → 拒绝**并给替代方案**（`git clean -nd` / `git restore`）。
+这两条是 `agent/hooks.py` 里的代码，不是提示词里的"请别做"。关掉验证：`ENABLE_HOOKS=0`。
+
+## 4. 60 秒　红 → 绿
+
+故意改错一处（只修 `mean` 不修 `median`）→ `PostToolUse` 自动测试红灯，
+**只回注 3 行失败摘要**（不是 80 行 traceback）→ 它照着红字改对。
+数字：`autotest: runs 4 / red 2 / green 2 / red_to_green 2`。
+
+## 5. 30 秒　reviewer 子 agent
+
+`git diff --stat` 看改动量 → `python -m app.inspect custom`：
+reviewer 在子 agent 里消化上万 token，主上下文只 +30（上限 500），只回最后一条结论。
+
+## 6. 30 秒　增量 C（选做，没做跳过）
+
+`kill -9` 掉进程再重启 → 从断点继续。本次未实现该项（+10 放弃）。

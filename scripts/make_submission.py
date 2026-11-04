@@ -74,7 +74,7 @@ README_TXT = """========== 大作业提交说明 ==========
                           course-lookup（走 MCP）、package-release（打包流程）
   skill_report.json       程序打印：catalog 183 / full 1162 / ratio 6.3 / 误触发 0
   custom_report.json      程序打印：AGENTS.md 3763B 两层 / 拦截 3 条 /
-                          自动测试 4 次（红→绿 2）/ reviewer 主上下文 +58 token
+                          自动测试 4 次（红→绿 2）/ reviewer 主上下文 +30 token
   agent/hooks.py          三条 hook 是代码：拦密钥文件、拦不可逆命令（带替代方案）、写完自动测试
   agent/reviewer.py       只读 reviewer 子 agent，只回最后一条消息
   开关：ENABLE_SKILLS=0 关技能；ENABLE_HOOKS=0 关 hook（现场可验）

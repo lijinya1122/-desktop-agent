@@ -34,7 +34,7 @@
 - **AGENTS.md 两层注入**：`~/.desktop-agent/AGENTS.md`（全局偏好）→ 项目根 `AGENTS.md`（项目地图，3.7 KB）
 - **三条 hook 是代码，不是提示词**：写 `.env`/`*.pem` 拒绝（密钥不入库）；`rm -rf` / `git push --force` / `git reset --hard` 拦下**并给替代方案**（`git revert` / `git clean -nd`）；`write`/`edit` 之后自动跑测试，只回注 4 行摘要
 - **自动测试回注**：4 次运行，红 2 绿 2，**红→绿 2 次**；回注 4 行 vs 整段 traceback 的 60–80 行
-- **reviewer 子 agent**：只读（`read` + 只认 `git diff/show/status/log` 的 bash），固定五条清单，只回最后一条消息 —— 一次审查在子 agent 里消化 **13,123 token**，主上下文只 **+58 token**（上限 500）
+- **reviewer 子 agent**：只读（`read` + 只认 `git diff/show/status/log` 的 bash），固定五条清单，只回最后一条消息 —— 一次审查在子 agent 里消化 **上万 token**，主上下文只 **+30 token**（上限 500；随 diff 大小浮动，数字以 `app.inspect custom` 当次运行输出为准）
 - 开关：`ENABLE_HOOKS=0` 整层关闭
 
 ## 回归（v1.0 没有被破坏）

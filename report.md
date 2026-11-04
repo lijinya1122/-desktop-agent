@@ -86,8 +86,11 @@ python app.py                   # 双击体验（没 Key 可在设置里开「�
 
 ```
 skill_report.json    catalog_tokens 183 / full_tokens 1162 / ratio 6.3 / trials 8 条 / false_positive 0
-custom_report.json   agents_md 3763B（global+project）/ denied 3 / autotest 4 次 r2g 2 / reviewer +58 token
+custom_report.json   agents_md 3763B（global+project）/ denied 3 / autotest 4 次 r2g 2 / reviewer +30 token
 ```
+
+> 注：`reviewer.main_context_delta` 随当前未提交改动量浮动（58 → 30 都跑出过），
+> 交付的 JSON 是仓库干净状态下 `python -m app.inspect custom` 的输出，验收现场以当次运行为准。
 
 ## 1. 每个增量做完之后，哪件事变快了
 
@@ -110,8 +113,8 @@ custom_report.json   agents_md 3763B（global+project）/ denied 3 / autotest 4 
 而完整 traceback 是 60–80 行 —— 这个差别决定了 `red_to_green` 能不能在同一次对话里发生。
 
 **reviewer 子 agent —— 省的是主上下文。**
-一次审查，diff 和文件内容在子 agent 里消化了 **13,123 token**，
-主对话只增加了 **58 token**（`main_context_delta: 58`，上限 500），结论是 2 条问题。
+一次审查，diff 和文件内容在子 agent 里消化了 **上万 token**（随 diff 大小浮动），
+主对话只增加了 **30 token**（`main_context_delta: 30`，上限 500），结论是 2 条问题。
 如果让主 agent 自己读那 8 个文件的 diff，这 13k token 会一直躺在上下文里，后面每一步都在为它付钱。
 
 ## 2. 一次判断错误

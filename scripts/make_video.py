@@ -151,7 +151,7 @@ def scenes() -> List[Dict[str, object]]:
                 "reviewer 子 agent 只读，只回最后一条消息",
             ],
             "image": None,
-            "kpi": [("3", "条硬拦截"), ("2", "次红转绿"), ("+58", "主上下文 token")],
+            "kpi": [("3", "条硬拦截"), ("2", "次红转绿"), ("+30", "主上下文 token")],
             "narration": "增量二加的是定制层。三条硬约束真的拦下了三次危险操作；"
                          "改完自动跑测试，红转绿两次；审查子 agent 消化一万三千个词元，"
                          "主对话只增加五十八个。",
@@ -193,7 +193,7 @@ NOTES = [
     "mcp_course_server.py 纯标准库实现 stdio JSON-RPC，暴露 3 个工具，读入 12 条真实课程，按星期 + 时间排序。",
     "三道护栏都在代码里：路径白名单、命令超时 3 秒、写确认闸门；另有连续 3 次相同调用检测。",
     "只把 name + description 放进 system prompt（183 token）；正文 1162 token 仅在 use_skill 时注入，比例 6.3 倍；8 条触发试验误触发 0。",
-    "AGENTS.md 两层注入（全局 + 项目 3.7KB）；hook 拦下 3 次危险操作并给替代方案；改后自动测试红转绿 2 次、只回注 4 行；reviewer 消化 13k token，主上下文 +58。",
+    "AGENTS.md 两层注入（全局 + 项目 3.7KB）；hook 拦下 3 次危险操作并给替代方案；改后自动测试红转绿 2 次、只回注 4 行；reviewer 消化 13k token，主上下文只加 30（上限 500）。",
     "两份 JSON 均由程序打印：skill_report.json / custom_report.json；ENABLE_SKILLS=0、ENABLE_HOOKS=0 可整体关闭。自检 13/13、冒烟 8/8。",
     "仓库 github.com/lijinya1122/-desktop-agent，tag：v1.0 基线 / v1.1 技能 / v1.2 定制层；安装包与报告见提交文件夹。",
 ]
