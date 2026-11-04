@@ -65,8 +65,8 @@ README_TXT = """========== 大作业提交说明 ==========
                 MiniCursor_1.0.0_Windows_x64.zip        ← 解压即用备用
   docs/         trace.md（真实运行记录）、failures.md（失败与恢复）、
                 stress_test.md、build.md、demo_script.md（5 分钟演示脚本）、截图
-  演示视频2.mp4  演示视频：真实界面操作录屏（修 bug 失败恢复 → diff 确认 → 测试；
-                新建文件 → 越界被拒），带章节字幕；
+  演示视频.mp4  演示视频：真实界面操作录屏（修 bug 失败恢复 → diff 确认 → 测试；
+                新建文件 → 越界被拒 → MCP 查课表 → hook 拦截），带章节字幕；
                 scripts/record_demo.py + scripts/package_screen.py 一键复现
 
 【增量作业（v1.1 / v1.2）】

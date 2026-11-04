@@ -4,7 +4,7 @@
   左下 LIVE DEMO 蓝条 → 右上 SCREEN CAPTURE 页码
 
     python scripts/package_screen.py --raw build/video/demo_raw.mp4 \
-        --out "C:\\Users\\Lenovo\\Desktop\\一苇以航\\演示视频2.mp4"
+        --out "C:\\Users\\Lenovo\\Desktop\\一苇以航\\演示视频.mp4"
 """
 
 from __future__ import annotations
@@ -182,7 +182,7 @@ def package(raw: Path, out: Path) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description="给真实录屏加包装")
     ap.add_argument("--raw", default=str(BUILD / "demo_raw.mp4"))
-    ap.add_argument("--out", default=str(Path.home() / "Desktop" / "一苇以航" / "演示视频2.mp4"))
+    ap.add_argument("--out", default=str(Path.home() / "Desktop" / "一苇以航" / "演示视频.mp4"))
     args = ap.parse_args()
     print(json.dumps(package(Path(args.raw), Path(args.out)), ensure_ascii=False, indent=2))
     return 0

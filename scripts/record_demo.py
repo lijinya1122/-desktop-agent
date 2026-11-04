@@ -1,6 +1,6 @@
 """把真实界面操作录成视频（CDP 收帧，不是截图轮播）。
 
-    python scripts/record_demo.py --out "C:\\Users\\Lenovo\\Desktop\\一苇以航\\演示视频2.mp4"
+    python scripts/record_demo.py --out "C:\\Users\\Lenovo\\Desktop\\一苇以航\\演示视频.mp4"
 
 做法：
   1) 起后端（`app.py --no-window`，MOCK_TICK 放慢，让每步有真实间隔）
@@ -388,7 +388,7 @@ async def record(out: Path, tick: float, keep: bool) -> Dict[str, Any]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="录真实界面操作过程")
-    ap.add_argument("--out", default=str(Path.home() / "Desktop" / "演示视频2.mp4"))
+    ap.add_argument("--out", default=str(Path.home() / "Desktop" / "演示视频.mp4"))
     ap.add_argument("--tick", type=float, default=0.9, help="每步间隔秒数（越大越慢）")
     ap.add_argument("--keep", action="store_true", help="保留中间帧")
     args = ap.parse_args()

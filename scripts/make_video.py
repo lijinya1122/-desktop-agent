@@ -6,7 +6,7 @@
   合成 = imageio-ffmpeg 自带的 ffmpeg（PIL 画帧 → ffmpeg 编码）
 
 用法：
-    python scripts/make_video.py --out "C:\\Users\\Lenovo\\Desktop\\一苇以航\\演示视频2.mp4"
+    python scripts/make_video.py --out "C:\\Users\\Lenovo\\Desktop\\一苇以航\\演示视频.mp4"
 """
 
 from __future__ import annotations
@@ -415,7 +415,7 @@ def build(out: Path, voice: bool = False) -> Dict[str, object]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="合成演示视频（无需录屏）")
-    ap.add_argument("--out", default=str(Path.home() / "Desktop" / "演示视频2.mp4"))
+    ap.add_argument("--out", default=str(Path.home() / "Desktop" / "演示视频.mp4"))
     ap.add_argument("--voice", action="store_true",
                     help="加中文旁白（默认不加：画面旁注 + 静音，适合静音播放）")
     args = ap.parse_args()
