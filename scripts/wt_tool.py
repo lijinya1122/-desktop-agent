@@ -58,11 +58,7 @@ def greet(n):
 
 
 def add_test(path: str) -> None:
-    p = Path(path)
-    src = p.read_text(encoding="utf-8")
-    addition = '''
-
-def test_stdev_basic():
+    addition = '''def test_stdev_basic():
     assert abs(stats.stdev([2, 4, 4, 4, 5, 5, 7, 9]) - 2.138) < 0.01
 
 
@@ -72,9 +68,13 @@ def test_stdev_need_two():
     except ValueError:
         return
     raise AssertionError("stdev([1]) 应该抛 ValueError")
+
+
 '''
-    t.write(path, src.rstrip("\n") + addition)
-    print("[wt_tool] test_stats.py：+2 个 stdev 用例")
+    # 用 edit 插到 if __name__ 块之前 —— 追加到文件尾的话，
+    # main 块先执行，新用例根本不会被收集（这正是「agent 踩过的坑」）
+    t.edit(path, old='if __name__ == "__main__":', new=addition + 'if __name__ == "__main__":')
+    print("[wt_tool] test_stats.py：+2 个 stdev 用例（插在 main 块前）")
 
 
 def main() -> None:
