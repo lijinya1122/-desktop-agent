@@ -64,7 +64,7 @@ def wt_task(name: str, wt: Path) -> Dict[str, Any]:
                  [PY, "-X", "utf8", str(ROOT / "scripts" / "wt_tool.py"),
                   "add-test", str(ws / "test_stats.py")])
         out = run_tool("bash 跑测试（workspace 下）", [PY, "-X", "utf8", "test_stats.py"], cwd=ws)
-        ok = "6/6 通过" in out
+        ok = "6/6" in out   # 中文在 cmd 管道里可能乱码，用 ASCII 判定
     else:  # 给 hello.py 加 greet(n)
         run_tool("read hello.py", [PY, "-X", "utf8", str(ROOT / "scripts" / "wt_tool.py"),
                                    "read", str(ws / "hello.py")])
