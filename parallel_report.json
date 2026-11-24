@@ -36,7 +36,7 @@
   "tasks": [
     {
       "task": "A",
-      "seconds": 2.4,
+      "seconds": 2.5,
       "steps": [
         "read stats.py",
         "edit stats.py（修 bug + 加 stdev）",
@@ -57,11 +57,11 @@
     }
   ],
   "parallel": {
-    "wall_seconds": 2.4,
-    "serial_estimate": 4.2,
-    "speedup": 1.75
+    "wall_seconds": 2.5,
+    "serial_estimate": 4.3,
+    "speedup": 1.72
   },
-  "worktree_list": "\"C:/Users/Lenovo/Desktop/\\347\\240\\224\\344\\270\\200\\350\\257\\276\\347\\250\\213\\344\\270\\212/python/homework7/2026.9-python/desktop-agent\" 8506773 [main]\n\"C:/Users/Lenovo/Desktop/\\347\\240\\224\\344\\270\\200\\350\\257\\276\\347\\250\\213\\344\\270\\212/python/homework7/2026.9-python/wt-a\"          8506773 [feat/stdev]\n\"C:/Users/Lenovo/Desktop/\\347\\240\\224\\344\\270\\200\\350\\257\\276\\347\\250\\213\\344\\270\\212/python/homework7/2026.9-python/wt-b\"          8506773 [feat/greet]",
+  "worktree_list": "\"C:/Users/Lenovo/Desktop/\\347\\240\\224\\344\\270\\200\\350\\257\\276\\347\\250\\213\\344\\270\\212/python/homework7/2026.9-python/desktop-agent\" d094375 [main]\n\"C:/Users/Lenovo/Desktop/\\347\\240\\224\\344\\270\\200\\350\\257\\276\\347\\250\\213\\344\\270\\212/python/homework7/2026.9-python/wt-a\"          d094375 [feat/stdev]\n\"C:/Users/Lenovo/Desktop/\\347\\240\\224\\344\\270\\200\\350\\257\\276\\347\\250\\213\\344\\270\\212/python/homework7/2026.9-python/wt-b\"          d094375 [feat/greet]",
   "ok": false,
   "cleanup": [
     "wt-a",
