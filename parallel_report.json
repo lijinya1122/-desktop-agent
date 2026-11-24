@@ -36,18 +36,18 @@
   "tasks": [
     {
       "task": "A",
-      "seconds": 2.5,
+      "seconds": 2.6,
       "steps": [
         "read stats.py",
         "edit stats.py（修 bug + 加 stdev）",
         "edit test_stats.py（+2 用例）",
         "bash 跑测试（workspace 下）"
       ],
-      "tests_pass": false
+      "tests_pass": true
     },
     {
       "task": "B",
-      "seconds": 1.8,
+      "seconds": 1.9,
       "steps": [
         "read hello.py",
         "edit hello.py（+greet）",
@@ -57,12 +57,12 @@
     }
   ],
   "parallel": {
-    "wall_seconds": 2.5,
-    "serial_estimate": 4.3,
-    "speedup": 1.72
+    "wall_seconds": 2.6,
+    "serial_estimate": 4.5,
+    "speedup": 1.73
   },
-  "worktree_list": "\"C:/Users/Lenovo/Desktop/\\347\\240\\224\\344\\270\\200\\350\\257\\276\\347\\250\\213\\344\\270\\212/python/homework7/2026.9-python/desktop-agent\" d094375 [main]\n\"C:/Users/Lenovo/Desktop/\\347\\240\\224\\344\\270\\200\\350\\257\\276\\347\\250\\213\\344\\270\\212/python/homework7/2026.9-python/wt-a\"          d094375 [feat/stdev]\n\"C:/Users/Lenovo/Desktop/\\347\\240\\224\\344\\270\\200\\350\\257\\276\\347\\250\\213\\344\\270\\212/python/homework7/2026.9-python/wt-b\"          d094375 [feat/greet]",
-  "ok": false,
+  "worktree_list": "\"C:/Users/Lenovo/Desktop/\\347\\240\\224\\344\\270\\200\\350\\257\\276\\347\\250\\213\\344\\270\\212/python/homework7/2026.9-python/desktop-agent\" 0bb7d07 [main]\n\"C:/Users/Lenovo/Desktop/\\347\\240\\224\\344\\270\\200\\350\\257\\276\\347\\250\\213\\344\\270\\212/python/homework7/2026.9-python/wt-a\"          0bb7d07 [feat/stdev]\n\"C:/Users/Lenovo/Desktop/\\347\\240\\224\\344\\270\\200\\350\\257\\276\\347\\250\\213\\344\\270\\212/python/homework7/2026.9-python/wt-b\"          0bb7d07 [feat/greet]",
+  "ok": true,
   "cleanup": [
     "wt-a",
     "wt-b",
