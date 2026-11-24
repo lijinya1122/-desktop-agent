@@ -1,0 +1,107 @@
+{
+  "prs": [
+    {
+      "id": "pr_01",
+      "file": "pr_01.py",
+      "bugs": [
+        {
+          "kind": "sql_injection",
+          "line": 5,
+          "desc": "f-string 把 uid 直接拼进 SQL"
+        }
+      ]
+    },
+    {
+      "id": "pr_02",
+      "file": "pr_02.py",
+      "bugs": [
+        {
+          "kind": "hardcoded_secret",
+          "line": 2,
+          "desc": "生产密钥硬编码在源码里"
+        }
+      ]
+    },
+    {
+      "id": "pr_03",
+      "file": "pr_03.py",
+      "bugs": [
+        {
+          "kind": "n_plus_one",
+          "line": 5,
+          "desc": "循环里逐条 execute，应批量 executemany"
+        }
+      ]
+    },
+    {
+      "id": "pr_04",
+      "file": "pr_04.py",
+      "bugs": [
+        {
+          "kind": "mutable_default",
+          "line": 3,
+          "desc": "可变默认参数 cart=[]，多次调用共享同一列表"
+        }
+      ]
+    },
+    {
+      "id": "pr_05",
+      "file": "pr_05.py",
+      "bugs": [
+        {
+          "kind": "off_by_one",
+          "line": 7,
+          "desc": "i <= len(items) 会越界，应为 <"
+        }
+      ]
+    },
+    {
+      "id": "pr_06",
+      "file": "pr_06.py",
+      "bugs": [
+        {
+          "kind": "debug_print",
+          "line": 4,
+          "desc": "调试 print 残留"
+        },
+        {
+          "kind": "todo_left",
+          "line": 5,
+          "desc": "TODO 残留"
+        }
+      ]
+    },
+    {
+      "id": "pr_07",
+      "file": "pr_07.py",
+      "bugs": [
+        {
+          "kind": "open_without_with",
+          "line": 4,
+          "desc": "open 没用 with，异常时文件不关闭"
+        },
+        {
+          "kind": "except_pass",
+          "line": 8,
+          "desc": "except: pass 静默吞异常"
+        }
+      ]
+    },
+    {
+      "id": "pr_08",
+      "file": "pr_08.py",
+      "bugs": [
+        {
+          "kind": "eval_use",
+          "line": 3,
+          "desc": "eval 执行任意输入，注入风险"
+        },
+        {
+          "kind": "zero_division",
+          "line": 6,
+          "desc": "b 可能为 0，未防护"
+        }
+      ]
+    }
+  ]
+}

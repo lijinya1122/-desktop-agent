@@ -1,0 +1,159 @@
+{
+  "recall": 1.0,
+  "false_positives": 0,
+  "bugs_total": 11,
+  "bugs_hit": 11,
+  "pass_line": {
+    "recall_min": 0.6,
+    "fp_max": 3,
+    "ok": true
+  },
+  "per_pr": [
+    {
+      "id": "pr_01",
+      "file": "pr_01.py",
+      "verdict": "必须改",
+      "comment": "[评审] pr_01.py → 判定：必须改\n  L6 [critical] (安全) f-string 拼 SQL，等价于把输入当成代码执行；用参数绑定 — cur = conn.execute(f\"SELECT * FROM users WHERE id = {uid}\")",
+      "bugs": [
+        {
+          "kind": "sql_injection",
+          "label_line": 5,
+          "hit": true,
+          "detected_line": 6,
+          "desc": "f-string 把 uid 直接拼进 SQL"
+        }
+      ]
+    },
+    {
+      "id": "pr_02",
+      "file": "pr_02.py",
+      "verdict": "必须改",
+      "comment": "[评审] pr_02.py → 判定：必须改\n  L2 [critical] (安全) 疑似硬编码密钥（sk-/AKIA/私钥块），进仓库=已泄露 — API_KEY = \"sk-prod-a7f3b2c9d8e1f4a6b5c3d2e1f0a9b8c7\"",
+      "bugs": [
+        {
+          "kind": "hardcoded_secret",
+          "label_line": 2,
+          "hit": true,
+          "detected_line": 2,
+          "desc": "生产密钥硬编码在源码里"
+        }
+      ]
+    },
+    {
+      "id": "pr_03",
+      "file": "pr_03.py",
+      "verdict": "可以合",
+      "comment": "[评审] pr_03.py → 判定：可以合\n  L5 [warning] (性能) 循环内逐条查询（n+1）：应批量执行或一次取回 — execute",
+      "bugs": [
+        {
+          "kind": "n_plus_one",
+          "label_line": 5,
+          "hit": true,
+          "detected_line": 5,
+          "desc": "循环里逐条 execute，应批量 executemany"
+        }
+      ]
+    },
+    {
+      "id": "pr_04",
+      "file": "pr_04.py",
+      "verdict": "必须改",
+      "comment": "[评审] pr_04.py → 判定：必须改\n  L2 [critical] (正确性) 可变默认参数：默认值在定义时创建一次，多次调用共享同一个对象 — def add_item(...)",
+      "bugs": [
+        {
+          "kind": "mutable_default",
+          "label_line": 3,
+          "hit": true,
+          "detected_line": 2,
+          "desc": "可变默认参数 cart=[]，多次调用共享同一列表"
+        }
+      ]
+    },
+    {
+      "id": "pr_05",
+      "file": "pr_05.py",
+      "verdict": "必须改",
+      "comment": "[评审] pr_05.py → 判定：必须改\n  L6 [critical] (正确性) <= len(...) 会越界一位，应为 < — if i <= len(items):",
+      "bugs": [
+        {
+          "kind": "off_by_one",
+          "label_line": 7,
+          "hit": true,
+          "detected_line": 6,
+          "desc": "i <= len(items) 会越界，应为 <"
+        }
+      ]
+    },
+    {
+      "id": "pr_06",
+      "file": "pr_06.py",
+      "verdict": "可以合",
+      "comment": "[评审] pr_06.py → 判定：可以合\n  L3 [suggestion] (质量) 调试 print 残留，提交前应换成日志或删掉 — print(\"price=\", price, \"vip=\", vip)\n  L4 [suggestion] (质量) TODO/FIXME 残留，要么当场做掉要么进任务系统 — # TODO 下个月再改成配置驱动",
+      "bugs": [
+        {
+          "kind": "debug_print",
+          "label_line": 4,
+          "hit": true,
+          "detected_line": 3,
+          "desc": "调试 print 残留"
+        },
+        {
+          "kind": "todo_left",
+          "label_line": 5,
+          "hit": true,
+          "detected_line": 4,
+          "desc": "TODO 残留"
+        }
+      ]
+    },
+    {
+      "id": "pr_07",
+      "file": "pr_07.py",
+      "verdict": "建议改",
+      "comment": "[评审] pr_07.py → 判定：建议改\n  L3 [warning] (质量) open 没有用 with 管理，异常路径不会关闭文件 — f = open(path, \"r\")\n  L8 [warning] (质量) except: pass 静默吞掉异常，出问题时无从排查 — except Exception:",
+      "bugs": [
+        {
+          "kind": "open_without_with",
+          "label_line": 4,
+          "hit": true,
+          "detected_line": 3,
+          "desc": "open 没用 with，异常时文件不关闭"
+        },
+        {
+          "kind": "except_pass",
+          "label_line": 8,
+          "hit": true,
+          "detected_line": 8,
+          "desc": "except: pass 静默吞异常"
+        }
+      ]
+    },
+    {
+      "id": "pr_08",
+      "file": "pr_08.py",
+      "verdict": "必须改",
+      "comment": "[评审] pr_08.py → 判定：必须改\n  L3 [critical] (安全) eval 执行任意字符串；对外部输入使用=注入风险 — return eval(expr)\n  L6 [warning] (正确性) 除数 b 是函数参数且未判空，传 0 直接崩 — return a / b",
+      "bugs": [
+        {
+          "kind": "eval_use",
+          "label_line": 3,
+          "hit": true,
+          "detected_line": 3,
+          "desc": "eval 执行任意输入，注入风险"
+        },
+        {
+          "kind": "zero_division",
+          "label_line": 6,
+          "hit": true,
+          "detected_line": 6,
+          "desc": "b 可能为 0，未防护"
+        }
+      ]
+    }
+  ],
+  "missed": [],
+  "false_pos_detail": [],
+  "summary_comment": "[汇总评审] 本批 8 份 PR：5 份必须改、1 份建议改、2 份可以合。\n已知 11 处 bug 命中 11（召回 100%），误报 0 条。",
+  "exam": "C:\\Users\\Lenovo\\Desktop\\研一课程上\\python\\homework7\\2026.9-python\\desktop-agent\\datasets\\review",
+  "note": "引擎=四专科规则检查（agent/review_engine.py），结果可复现；判定档位=rubric 三档"
+}

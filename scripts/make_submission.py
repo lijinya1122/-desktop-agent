@@ -53,18 +53,18 @@ README_TXT = """========== 大作业提交说明 ==========
 
 【三个链接】（评分看的就是这三个）
   仓库（public）：{repo}
-  版本标签：{repo}/tags            → v1.0 基线 / v1.1 技能 / v1.2 定制层
+  版本标签：{repo}/tags            → v1.0 基线 / v1.1 技能 / v1.2 定制层 / v1.3 体检 / v1.4 并行 / v1.5 评审
   Release：{release}
 
 【目录内容】
   README.md     三步启动、工具规格、技能与 hook、护栏说明
-  report.md     报告：架构取舍 / 判断错误 / 增量作业三节
+  report.md     报告：架构取舍 / 判断错误 / 增量作业三节 + v1.5 三增量
   AGENTS.md     项目地图（会被注入 system prompt 的交付物本身）
-  源码/         完整项目源码（agent/ app/ skills/ server/ ui/ examples/ scripts/ workspace/）
+  源码/         完整项目源码（agent/ app/ skills/ server/ ui/ examples/ scripts/ workspace/ datasets/）
   安装包/       MiniCursor_1.0.0_Windows_x64_Setup.exe   ← 双击安装（推荐）
                 MiniCursor_1.0.0_Windows_x64.zip        ← 解压即用备用
   docs/         trace.md（真实运行记录）、failures.md（失败与恢复）、
-                stress_test.md、build.md、demo_script.md（5 分钟演示脚本）、截图
+                stress_test.md、build.md、demo_script.md（演示脚本）、截图
   演示视频.mp4  演示视频：真实界面操作录屏（修 bug 失败恢复 → diff 确认 → 测试；
                 新建文件 → 越界被拒 → MCP 查课表 → hook 拦截），带章节字幕；
                 scripts/record_demo.py + scripts/package_screen.py 一键复现
@@ -79,6 +79,19 @@ README_TXT = """========== 大作业提交说明 ==========
   agent/reviewer.py       只读 reviewer 子 agent，只回最后一条消息
   开关：ENABLE_SKILLS=0 关技能；ENABLE_HOOKS=0 关 hook（现场可验）
   复现：python -m app.inspect skills|custom --out xxx_report.json
+
+【增量作业（v1.5：D 可验证 / E 并行 / F 评审）】
+  readiness_report.json   程序打印：九根柱子 9/9 通过 → L4（及格线 L3）；
+                          一条命令 python -m app.check = 样式 + 自检 13/13 + 冒烟 8/8（19s）
+  parallel_report.json    程序打印：worktree 双工位并行 wall 2.6s（串行估 4.5s，1.73×）、
+                          两支干净合并 + 故意踩脚实验抓到 NOTES.md 冲突并写明原因
+  review_report.json      程序打印：四专科评审引擎对 8 份已知 bug 的 PR ——
+                          召回 100%（11/11，≥60%）、误报 0（≤3）、rubric 三档判定 + 一条汇总评论
+  agent/review_engine.py  四专科 + 裁判（课件 P30 的形状：专科各看一面，裁判去重定档）
+  datasets/review/        评审考卷：8 个带已知 bug 的 PR + labels.json（11 处标注）
+  app/check.py            一条命令跑完所有检查（课件 P13 第 03 件）
+  复现：python -m app.inspect readiness|parallel --out xxx_report.json
+        python -m app.review --out review_report.json
 
 【怎么运行】
   方式一（推荐）：双击 安装包 里的 Setup.exe → 下一步 → 装完自动启动

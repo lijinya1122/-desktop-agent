@@ -167,8 +167,51 @@ reviewer 排第三：它救我一次，但只在交付前那一次。
 ## 附：怎么复现
 
 ```powershell
+.venv\Scripts\python.exe -m app.check                                   # 一条命令：样式+自检+冒烟
 .venv\Scripts\python.exe -m app.inspect skills --out skill_report.json
 .venv\Scripts\python.exe -m app.inspect custom --out custom_report.json
 $env:ENABLE_SKILLS=0; .venv\Scripts\python.exe -m app.inspect skills   # 关掉技能：ratio 变 0、技能列表为空
 $env:ENABLE_HOOKS=0;  .venv\Scripts\python.exe -m app.inspect custom   # 关掉 hook：denied 变空数组
 ```
+
+---
+
+# v1.5 增量（D 可验证 / E 并行 / F 评审）
+
+数字全部来自程序打印的 JSON：`readiness_report.json`、`parallel_report.json`、`review_report.json`。
+
+## 4. 增量 D｜readiness 体检 —— 省的是「它能不能自己证明自己」
+
+`python -m app.inspect readiness`：九根柱子逐一给出**能跑的判据**（不是形容词），
+当前 **9/9 通过 → L4**（课件及格线 L3），一条命令 `python -m app.check`
+把样式检查 + 自检 13 项 + 冒烟 8 项压进 **19 秒**。
+体检报告里"最该补的三条"指向 L4→L5 的真实差距：CI、pre-commit 接入 git、bash 结构化日志 ——
+不是"再多写点文档"。这个环（课件 P12）已经转起来：检查更好 → agent 敢接长活 → 我只看结论和三行红字。
+
+**判断错误的续集**：体检第一版把"测试"柱判为不通过，因为 `selftest.py` 的输出里
+`4/4 通过`（test_stats 子套件）先于 `13/13 通过` 出现，正则抓错了数字 ——
+「报告数字必须程序打印」这条纪律同样约束体检器本身：解析验收命令的输出要取**最后一个**结论。
+
+## 5. 增量 E｜worktree 双工位 —— 省的是墙钟时间，买不到判断力
+
+`python -m app.inspect parallel`：
+两个 worktree（`feat/stdev` / `feat/greet`）同时开工，任务在文件层互不相碰，
+**wall 2.6s vs 串行估 4.5s = 1.73×**，两工位测试全过，合回 main 干净无冲突。
+随后做「故意踩脚」实验：两个分支重写 `workspace/NOTES.md` 的同一行 ——
+merge 如实报 `CONFLICT in workspace/NOTES.md`，报告里写清原因（课件 P22 冲突来源 1：同一个文件）
+与对策（切任务时写明边界）。收尾 `worktree remove` + 删分支全部自动化（P19 那三个最容易忘的收尾）。
+
+**判断错误**：第一版把 worktree 建在 `..\wt-a`，git 解析相对路径的基准和 shell 不一样，
+工位落在了上一级目录，任务全部「路径越界」失败 —— 改成绝对路径后一次通过。
+这条直接印证第 2 讲的主张：并行的坑不在模型，在环境。
+
+## 6. 增量 F｜review 考卷 —— 评审从「凭感觉」变成「可打分」
+
+`python -m app.review`：四专科（安全/正确性/性能/质量）按 AST+规则各看一面，
+裁判去重、按三档 rubric 定档（可以合 / 建议改 / 必须改），**只回一条汇总评论**。
+对 8 份已知 bug 的 PR（11 处标注）：**召回 100%（11/11），误报 0**，及格线 60% / ≤3。
+判定分布：5 份必须改、1 份建议改、2 份可以合。漏报清单空 —— 因为第一版只召回 73%
+（密钥正则不吃连字符、`except:` 与 `pass` 分行 AST 没抓、除零没有守卫分析），
+三条都修掉了，这正是「历史 PR 当考卷，评审器被评审喂大」（课件 P29）的实操版。
+
+三类检不出的（意图错/需求不全/组织上下文）考卷里没有 —— 那是人的部分。

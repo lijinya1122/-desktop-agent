@@ -12,11 +12,14 @@ agent/skills.py   ← 技能系统：只加载目录，正文靠 use_skill(name)
 agent/hooks.py    ← 三条硬约束（PreToolUse 拦截 / PostToolUse 自动测试）
 agent/agents_md.py← AGENTS.md 两层注入（全局 → 项目）
 agent/reviewer.py ← 只读 reviewer 子 agent，只回最后一条消息
+agent/review_engine.py ← 四专科评审引擎 + 裁判（去重/定档），供 review 子命令用
 server/app.py     ← FastAPI + WebSocket，前端只发消息、收事件
 ui/               ← 单页界面，无构建步骤，改完刷新即可
 skills/*/SKILL.md ← 技能（一个目录一件事，≤80 行）
-app/inspect.py    ← 验收命令：skills / custom / daemon 三份 JSON
-scripts/          ← selftest.py（冒烟）、failure_demo.py、make_submission.py
+app/inspect.py    ← 验收命令：skills / custom / readiness / parallel / daemon 五份 JSON
+app/review.py     ← review 子命令：对 datasets/review/ 考卷出评审，算召回与误报
+scripts/          ← selftest.py（冒烟）、parallel_demo.py（worktree 实验）、make_submission.py
+datasets/review/  ← 评审考卷：8 个带已知 bug 的 PR + labels.json（11 处标注）
 examples/         ← 两个 MCP server（demo / course）
 workspace/        ← 沙箱目录；stats.py 里**故意留着空列表 bug**，别顺手修
 ```
@@ -24,10 +27,14 @@ workspace/        ← 沙箱目录；stats.py 里**故意留着空列表 bug**�
 # 构建与测试
 
 ```powershell
-.venv\Scripts\python.exe scripts/selftest.py                      # 冒烟，必须 13/13
+.venv\Scripts\python.exe -m app.check          # ← 一条命令：样式 + 自检 13/13 + 冒烟 8/8（约 19s）
+.venv\Scripts\python.exe scripts/selftest.py                      # 自检，必须 13/13
 .venv\Scripts\python.exe scripts/smoke_ws.py                       # WebSocket 8/8
 .venv\Scripts\python.exe -m app.inspect skills --out skill_report.json
 .venv\Scripts\python.exe -m app.inspect custom --out custom_report.json
+.venv\Scripts\python.exe -m app.inspect readiness --out readiness_report.json   # 九柱体检（≥L3）
+.venv\Scripts\python.exe -m app.inspect parallel --out parallel_report.json     # worktree 双工位
+.venv\Scripts\python.exe -m app.review --out review_report.json                 # 评审考卷（召回≥60%）
 ```
 
 打包：`pyinstaller desktop-agent.spec` → `Compress-Archive` → `ISCC.exe installer\install.iss`。
