@@ -159,7 +159,7 @@ def main() -> int:
         shutil.copy2(video, dest / "演示视频.mp4")
 
     for p in (ROOT / "docs").glob("*"):
-        if p.is_file() and p.suffix.lower() in (".md", ".png"):
+        if p.is_file() and p.suffix.lower() in (".md", ".png", ".docx"):
             shutil.copy2(p, dest / "docs" / p.name)
 
     setup = ROOT / "installer" / "MiniCursor_1.0.0_Windows_x64_Setup.exe"
