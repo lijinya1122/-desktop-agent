@@ -39,8 +39,7 @@ def stdev(nums):
     var = sum((x - m) ** 2 for x in nums) / (len(nums) - 1)
     return var ** 0.5
 '''
-    r = t.write(path, src2.rstrip("\n") + addition)
-    assert r.ok, r.text
+    t.write(path, src2.rstrip("\n") + addition)   # 失败会抛 ToolError（非零退出）
     print("[wt_tool] stats.py：修 bug + 加 stdev 完成")
 
 
@@ -54,8 +53,7 @@ def greet(n):
     """返回 n 行问候（worktree 工位 B 的任务）。"""
     return [f"hello #{i}" for i in range(1, n + 1)]
 '''
-    r = t.write(path, src)
-    assert r.ok, r.text
+    t.write(path, src)
     print("[wt_tool] hello.py：加 greet 完成")
 
 
@@ -75,8 +73,7 @@ def test_stdev_need_two():
         return
     raise AssertionError("stdev([1]) 应该抛 ValueError")
 '''
-    r = t.write(path, src.rstrip("\n") + addition)
-    assert r.ok, r.text
+    t.write(path, src.rstrip("\n") + addition)
     print("[wt_tool] test_stats.py：+2 个 stdev 用例")
 
 
