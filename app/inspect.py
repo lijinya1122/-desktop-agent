@@ -212,6 +212,20 @@ def cmd_readiness(args) -> int:
     return 0
 
 
+# ---------------------------------------------------------------- parallel（增量 E）
+def cmd_parallel(args) -> int:
+    import subprocess as sp
+
+    r = sp.run([sys.executable, "-X", "utf8", str(ROOT / "scripts" / "parallel_demo.py"),
+                "--out", args.out or "parallel_report.json"],
+               cwd=ROOT, capture_output=True, text=True,
+               encoding="utf-8", errors="replace", timeout=600)
+    print(r.stdout[-1200:] if r.stdout else "")
+    if r.returncode != 0:
+        print(r.stderr[-600:])
+    return r.returncode
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m app.inspect",
                                  description="生成验收 JSON（数字全部由程序打印）")
@@ -219,6 +233,7 @@ def main(argv: list[str] | None = None) -> int:
     for name, fn, help_ in (("skills", cmd_skills, "技能系统报告"),
                             ("custom", cmd_custom, "定制层报告"),
                             ("readiness", cmd_readiness, "九柱体检报告（增量 D）"),
+                            ("parallel", cmd_parallel, "worktree 双工位并行报告（增量 E）"),
                             ("daemon", cmd_daemon, "常驻能力报告（选做）")):
         p = sub.add_parser(name, help=help_)
         p.add_argument("--out", default=None, help="写到文件（同时打印）")
