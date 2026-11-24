@@ -89,19 +89,20 @@ def main() -> int:
         if git("status", "--porcelain").stdout.strip():
             raise RuntimeError("工作树不干净：先提交再并行（派活纪律 01）")
 
-        # 1. 两个工位
+        # 1. 两个工位（路径全部用绝对路径 —— git 对相对路径的解析基准和 shell 不同）
+        wt_dirs = {"wt-a": (ROOT.parent / "wt-a").resolve(), "wt-b": (ROOT.parent / "wt-b").resolve()}
         for tag, branch in (("wt-a", "feat/stdev"), ("wt-b", "feat/greet")):
-            git("worktree", "add", f"../{tag}", "-b", branch)
+            git("worktree", "add", str(wt_dirs[tag]), "-b", branch)
         report["worktrees"] = [
-            {"name": "wt-a", "branch": "feat/stdev", "dir": str(ROOT.parent / "wt-a")},
-            {"name": "wt-b", "branch": "feat/greet", "dir": str(ROOT.parent / "wt-b")}]
+            {"name": "wt-a", "branch": "feat/stdev", "dir": str(wt_dirs["wt-a"])},
+            {"name": "wt-b", "branch": "feat/greet", "dir": str(wt_dirs["wt-b"])}]
         listing = git("worktree", "list").stdout.strip()
 
         # 2. 并行跑（同时开两个工位）
         t0 = time.time()
         with ThreadPoolExecutor(max_workers=2) as pool:
-            futs = [pool.submit(wt_task, "A", ROOT.parent / "wt-a"),
-                    pool.submit(wt_task, "B", ROOT.parent / "wt-b")]
+            futs = [pool.submit(wt_task, "A", wt_dirs["wt-a"]),
+                    pool.submit(wt_task, "B", wt_dirs["wt-b"])]
             results = [f.result() for f in futs]
         wall = round(time.time() - t0, 1)
         serial = round(sum(r["seconds"] for r in results), 1)
@@ -120,11 +121,13 @@ def main() -> int:
         report["merge"] = {"clean_merges": merges, "conflict_files": []}
 
         # 4. 冲突实验：两个分支改 workspace/NOTES.md 的同一行
-        git("worktree", "add", "../wt-c", "-b", "feat/notes-c")
-        git("worktree", "add", "../wt-d", "-b", "feat/notes-d")
+        wt_c = (ROOT.parent / "wt-c").resolve()
+        wt_d = (ROOT.parent / "wt-d").resolve()
+        git("worktree", "add", str(wt_c), "-b", "feat/notes-c")
+        git("worktree", "add", str(wt_d), "-b", "feat/notes-d")
         notes = "并行实验日志：本行由 {who} 写入\n"
-        for tag, who in (("wt-c", "工位C"), ("wt-d", "工位D")):
-            (ROOT.parent / tag / "workspace" / "NOTES.md").write_text(notes.format(who=who), encoding="utf-8")
+        for tag, who, wdir in (("wt-c", "工位C", wt_c), ("wt-d", "工位D", wt_d)):
+            (wdir / "workspace" / "NOTES.md").write_text(notes.format(who=who), encoding="utf-8")
             git("add", "workspace/NOTES.md", cwd=ROOT.parent / tag)
             git("commit", "-m", f"notes: {who} 写入同一行", cwd=ROOT.parent / tag)
         git("merge", "--no-edit", "feat/notes-c")
@@ -148,8 +151,9 @@ def main() -> int:
 
         # 5. 收尾：删工位、删分支（课件 P19「三个你一定会忘的收尾」）
         cleanup = []
-        for tag in ("wt-a", "wt-b", "wt-c", "wt-d"):
-            git("worktree", "remove", f"../{tag}", "--force")
+        for tag, wdir in (("wt-a", wt_dirs["wt-a"]), ("wt-b", wt_dirs["wt-b"]),
+                          ("wt-c", wt_c), ("wt-d", wt_d)):
+            git("worktree", "remove", str(wdir), "--force")
             cleanup.append(tag)
         for branch in ("feat/stdev", "feat/greet", "feat/notes-c", "feat/notes-d"):
             git("branch", "-D", branch)
@@ -167,7 +171,7 @@ def main() -> int:
         # 兜底清理：任何异常路径都不给仓库留工位
         r = git("worktree", "list", check=False)
         for line in r.stdout.splitlines():
-            if "../wt-" in line:
+            if "/wt-" in line.replace("\\", "/"):
                 shutil.rmtree(line.split()[0], ignore_errors=True)
         git("worktree", "prune", check=False)
         for b in git("branch", "--list", "feat/*").stdout.split():
