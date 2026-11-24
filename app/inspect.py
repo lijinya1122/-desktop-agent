@@ -198,12 +198,27 @@ def cmd_daemon(args) -> int:
     return 0
 
 
+# ---------------------------------------------------------------- readiness（增量 D）
+def cmd_readiness(args) -> int:
+    from agent.readiness import readiness_report
+
+    data = readiness_report(ROOT)
+    _dump(data, args.out, "readiness")
+    secs = f"（{data['test_seconds']}s）" if data.get("test_seconds") else ""
+    todo = "; ".join(data["todo_top3"][:2])
+    print(f"\n核对：{data['passed']}/{data['total']} 根柱子通过 → {data['level']}，"
+          f"一条命令测试={'有' if data['one_command_tests'] else '缺'}{secs}，"
+          f"最该补：{todo[:70]}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m app.inspect",
                                  description="生成验收 JSON（数字全部由程序打印）")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name, fn, help_ in (("skills", cmd_skills, "技能系统报告"),
                             ("custom", cmd_custom, "定制层报告"),
+                            ("readiness", cmd_readiness, "九柱体检报告（增量 D）"),
                             ("daemon", cmd_daemon, "常驻能力报告（选做）")):
         p = sub.add_parser(name, help=help_)
         p.add_argument("--out", default=None, help="写到文件（同时打印）")

@@ -1,0 +1,81 @@
+{
+  "level": "L4",
+  "passed": 9,
+  "total": 9,
+  "ratio": 1.0,
+  "one_command_tests": true,
+  "command": "python -m app.check",
+  "test_seconds": 12.9,
+  "pillars": [
+    {
+      "key": "style",
+      "name": "样式与校验",
+      "ok": true,
+      "score": 100,
+      "evidence": "python scripts/check_style.py → [check_style] 30 个 .py 全部通过（语法/行长/静默异常/调试残留）"
+    },
+    {
+      "key": "build",
+      "name": "构建系统",
+      "ok": true,
+      "score": 100,
+      "evidence": "spec=yes，dist 产物 1 个"
+    },
+    {
+      "key": "tests",
+      "name": "测试",
+      "ok": true,
+      "score": 100,
+      "evidence": "python scripts/selftest.py → 13/13，12.9s",
+      "seconds": 12.9
+    },
+    {
+      "key": "docs",
+      "name": "文档",
+      "ok": true,
+      "score": 100,
+      "evidence": "README 221 行 / AGENTS.md=yes / docs 6 份"
+    },
+    {
+      "key": "env",
+      "name": "开发环境",
+      "ok": true,
+      "score": 100,
+      "evidence": "requirements.txt 6 条依赖 / .env.example=yes"
+    },
+    {
+      "key": "observability",
+      "name": "可观测性",
+      "ok": true,
+      "score": 100,
+      "evidence": "loop 写 trace=yes / docs/trace.md=yes / failures.md=yes"
+    },
+    {
+      "key": "security",
+      "name": "安全",
+      "ok": true,
+      "score": 100,
+      "evidence": "hooks 代码=yes / .gitignore 防密钥=yes / 泄露扫描 0 处"
+    },
+    {
+      "key": "task_discovery",
+      "name": "任务发现",
+      "ok": true,
+      "score": 100,
+      "evidence": "AGENTS.md 项目地图=yes / 技能 4 个 / MCP server 2 个"
+    },
+    {
+      "key": "product",
+      "name": "产品与实验",
+      "ok": true,
+      "score": 100,
+      "evidence": "安装包=yes / 界面截图=yes / 演示脚本=yes"
+    }
+  ],
+  "todo_top3": [
+    "L4 → L5 还差 CI（.github/workflows）：push 后自动跑 python -m app.check",
+    "把 pre-commit 钩子接上 git，让检查在 commit 那一刻就发生",
+    "给 bash 工具输出加结构化日志，可观测性从「有 trace」升级到「能检索」"
+  ],
+  "note": "判据全部是能跑的命令与存在的文件（课件 P11：别用「我觉得差不多了」）"
+}
