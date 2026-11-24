@@ -31,7 +31,7 @@ def git(*args: str, cwd: Path = ROOT, check: bool = True) -> subprocess.Complete
     r = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True,
                        encoding="utf-8", errors="replace", timeout=120)
     if check and r.returncode != 0:
-        raise RuntimeError(f"git {' '.join(args)} 失败: {r.stderr.strip()}")
+        raise RuntimeError(f"git {' '.join(args)} 失败: {(r.stderr or r.stdout).strip()}")
     return r
 
 
@@ -125,9 +125,11 @@ def main() -> int:
         wt_d = (ROOT.parent / "wt-d").resolve()
         git("worktree", "add", str(wt_c), "-b", "feat/notes-c")
         git("worktree", "add", str(wt_d), "-b", "feat/notes-d")
-        notes = "并行实验日志：本行由 {who} 写入\n"
+        stamp = time.strftime("%H%M%S")
         for tag, who, wdir in (("wt-c", "工位C", wt_c), ("wt-d", "工位D", wt_d)):
-            (wdir / "workspace" / "NOTES.md").write_text(notes.format(who=who), encoding="utf-8")
+            # 内容带时间戳：既保证 commit 总有变化，又保证两工位写入互不相同（才会真冲突）
+            (wdir / "workspace" / "NOTES.md").write_text(
+                f"并行实验日志#{stamp}：本行由 {who} 写入\n", encoding="utf-8")
             git("add", "workspace/NOTES.md", cwd=ROOT.parent / tag)
             git("commit", "-m", f"notes: {who} 写入同一行", cwd=ROOT.parent / tag)
         git("merge", "--no-edit", "feat/notes-c")
