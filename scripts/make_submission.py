@@ -147,10 +147,16 @@ def main() -> int:
 
     for name in ("README.md", "report.md", "AGENTS.md", "mcp.json", "requirements.txt",
                  "pyproject.toml", "desktop-agent.spec", "第一次运行请看这里.txt",
-                 "skill_report.json", "custom_report.json", "daemon_report.json"):
+                 "skill_report.json", "custom_report.json", "daemon_report.json",
+                 "readiness_report.json", "parallel_report.json", "review_report.json"):
         src = ROOT / name
         if src.exists():
             shutil.copy2(src, dest / name)
+
+    # 演示视频：录屏成品（package_screen.py 的输出）→ 一苇以航/演示视频.mp4
+    video = ROOT / "build" / "video" / "packaged.mp4"
+    if video.exists():
+        shutil.copy2(video, dest / "演示视频.mp4")
 
     for p in (ROOT / "docs").glob("*"):
         if p.is_file() and p.suffix.lower() in (".md", ".png"):
